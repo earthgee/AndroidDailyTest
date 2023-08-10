@@ -9,6 +9,7 @@
     </queries>
 
     <application
+        android:name=".MainApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -30,6 +31,10 @@
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
+        </activity>
+        <activity android:name=".androidbase.AndroidBaseMainActivity"/>
+        <activity
+            android:name=".androidbase.AidlClientActivity">
         </activity>
     </application>
 

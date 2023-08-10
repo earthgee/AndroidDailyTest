@@ -1,40 +1,48 @@
 package com.earthgee.dailytest
 
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.IBinder
 import android.widget.TextView
-import com.earthgee.aidlservice.IMyAidlInterface
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
+import com.alibaba.android.arouter.launcher.ARouter
+import com.julive.adapter.core.*
 
+/**
+ *  Created by zhaoruixuan1 on 2023/8/9
+ *  CopyRight (c) haodf.com
+ *  功能：主页面
+ */
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var myAidlInterface: IMyAidlInterface
+    val mainItemList = arrayListOf(
+        ItemModule("Android Base", "/base/aidl"),
+        ItemModule("Performance", "/performance/main")
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val text=findViewById<TextView>(R.id.text)
-
-        val serviceConnection = object: ServiceConnection {
-
-            override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
-                myAidlInterface = IMyAidlInterface.Stub.asInterface(p1)
-                val str = myAidlInterface.basicTypes(0,0L,false,0.0f,0.0f.toDouble(),"")
-                text.text = str
-            }
-
-            override fun onServiceDisconnected(p0: ComponentName?) {
-            }
-
+        val recyclerviewMain = findViewById<RecyclerView>(R.id.recycler_main)
+        listAdapter {
+            addAll(createViewModelList(mainItemList.size))
+            into(recyclerviewMain)
         }
-
-        val intent = Intent()
-        intent.action = "com.earthgee.aidlservice"
-        intent.`package` = "com.earthgee.aidlservice"
-        bindService(intent, serviceConnection, BIND_AUTO_CREATE)
     }
+
+    private fun createViewModelList(max: Int = 10) = (0..max-1).map { index ->
+        layoutViewModelDsl(R.layout.list_item_main, mainItemList[index]) {
+            onBindViewHolder {
+                val model = getModel<ItemModule>()
+                getView<TextView>(R.id.tv_content).text = model?.content
+            }
+            itemView.setOnClickListener {
+                val url = getModel<ItemModule>()?.url
+                ARouter.getInstance().build(url).navigation()
+            }
+        }
+    }
+
+    data class ItemModule(val content: String = "", val url: String = "")
+
 }
