@@ -1,11 +1,13 @@
 package com.earthgee.performance
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
+import com.earthgee.performance.allocationtracker.IntroActivity
 import com.julive.adapter.core.*
 
 /**
@@ -41,7 +43,7 @@ class PerformanceMainActivity : AppCompatActivity() {
                 val model = getModel<String>()
                 when(model) {
                     "Allocation Tracker" -> {
-                        //todo
+                        startActivity(Intent(this@PerformanceMainActivity, IntroActivity::class.java))
                     }
                 }
             }

@@ -18,3 +18,5 @@ rootProject.name = "DailyTest"
 include ':app'
 include ':aidlservice'
 include ':Performance'
+//test
+include ':TestCpp'
