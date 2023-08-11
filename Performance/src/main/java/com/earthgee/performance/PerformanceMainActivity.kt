@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.earthgee.performance.allocationtracker.IntroActivity
+import com.earthgee.performance.cpu.ProcessTrackActivity
 import com.julive.adapter.core.*
 
 /**
@@ -19,7 +20,7 @@ import com.julive.adapter.core.*
 class PerformanceMainActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
-        "Allocation Tracker"
+        "Allocation Tracker","Process Tracker"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,6 +45,9 @@ class PerformanceMainActivity : AppCompatActivity() {
                 when(model) {
                     "Allocation Tracker" -> {
                         startActivity(Intent(this@PerformanceMainActivity, IntroActivity::class.java))
+                    }
+                    "Process Tracker" -> {
+                        startActivity(Intent(this@PerformanceMainActivity, ProcessTrackActivity::class.java))
                     }
                 }
             }

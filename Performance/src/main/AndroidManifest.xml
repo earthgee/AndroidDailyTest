@@ -9,6 +9,7 @@
     <application>
         <activity android:name=".PerformanceMainActivity"/>
         <activity android:name=".allocationtracker.IntroActivity"/>
+        <activity android:name=".cpu.ProcessTrackActivity"/>
     </application>
 
 </manifest>
