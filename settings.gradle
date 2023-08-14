@@ -20,3 +20,4 @@ include ':aidlservice'
 include ':Performance'
 //test
 include ':TestCpp'
+include ':simulate_systrace'

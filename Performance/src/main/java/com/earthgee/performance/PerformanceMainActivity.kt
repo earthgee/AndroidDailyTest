@@ -20,7 +20,7 @@ import com.julive.adapter.core.*
 class PerformanceMainActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
-        "Allocation Tracker","Process Tracker"
+        "Allocation Tracker","Process Tracker","ATrace"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +48,9 @@ class PerformanceMainActivity : AppCompatActivity() {
                     }
                     "Process Tracker" -> {
                         startActivity(Intent(this@PerformanceMainActivity, ProcessTrackActivity::class.java))
+                    }
+                    "ATrace" -> {
+                        ARouter.getInstance().build("/atrace/main").navigation()
                     }
                 }
             }

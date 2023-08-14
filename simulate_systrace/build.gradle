@@ -11,7 +11,7 @@ kapt {
 }
 
 android {
-    namespace 'com.earthgee.performance'
+    namespace 'com.earthgee.simulate_systrace'
     compileSdk 33
 
     defaultConfig {
@@ -20,7 +20,6 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-
         externalNativeBuild {
             cmake {
                 abiFilters "armeabi-v7a","x86"
@@ -34,6 +33,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -41,15 +45,10 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-
-    externalNativeBuild {
-        cmake {
-            path "src/main/cpp/CMakeLists.txt"
-        }
-    }
 }
 
 dependencies {
+
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
@@ -60,11 +59,5 @@ dependencies {
     //arouter
     implementation 'com.github.jadepeakpoet.ARouter:arouter-api:1.0.2'
     kapt 'com.github.jadepeakpoet.ARouter:arouter-compiler:1.0.2'
-
-    //recyclerview adapter
-    def adapterVersion = '1.2.5'
-    implementation "com.github.ibaozi-cn.RecyclerViewAdapter:adapter-core:$adapterVersion"
-
-    implementation project(':simulate_systrace')
 
 }
