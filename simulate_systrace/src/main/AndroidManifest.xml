@@ -3,6 +3,7 @@
 
     <application>
         <activity android:name="com.earthgee.systrace.MainActivity" />
+        <activity android:name="com.earthgee.systrace.ThreadHookActivity" />
     </application>
 
 </manifest>
