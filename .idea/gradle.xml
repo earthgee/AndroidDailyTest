@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/aidlservice" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/simulate_systrace" />
+            <option value="$PROJECT_DIR$/systrace_gradle_plugin" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -1,0 +1,39 @@
+apply plugin: 'groovy'
+apply plugin: 'java'
+
+sourceSets {
+    main {
+        groovy {
+            srcDir 'src/main/groovy'
+        }
+
+        java {
+            srcDir "src/main/java"
+        }
+
+        resources {
+            srcDir 'src/main/resources'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation gradleApi()
+    implementation localGroovy()
+    implementation group: 'org.ow2.asm', name: 'asm', version: '5.1'
+    implementation group: 'org.ow2.asm', name: 'asm-commons', version: '5.1'
+    implementation 'com.android.tools.build:gradle:3.2.0'
+    implementation 'com.android.tools.lint:lint:26.0.1'
+    implementation 'com.android.tools.lint:lint-api:26.0.1'
+    implementation 'com.android.tools.lint:lint-checks:26.0.1'
+}
+
+version 1.0
+group "com.earthgee.systrace"
+
+apply from: rootProject.file('gradle/java-publish.gradle')
+
+tasks.withType(Copy).all {
+    duplicatesStrategy 'exclude'
+}

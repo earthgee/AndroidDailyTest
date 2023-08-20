@@ -21,3 +21,4 @@ include ':Performance'
 //test
 include ':TestCpp'
 include ':simulate_systrace'
+include ':systrace_gradle_plugin'
