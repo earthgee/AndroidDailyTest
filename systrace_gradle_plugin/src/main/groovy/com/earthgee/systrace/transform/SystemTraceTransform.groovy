@@ -2,12 +2,17 @@ package com.earthgee.systrace.transform
 
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformTask
+import com.earthgee.systrace.MethodCollector
+import com.earthgee.systrace.MethodTracer
 import com.earthgee.systrace.TraceBuildConfig
+import com.earthgee.systrace.item.TraceMethod
+import com.earthgee.systrace.retrace.MappingCollector
+import com.earthgee.systrace.retrace.MappingReader
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.api.execution.TaskExecutionGraphListener
-
+import com.earthgee.systrace.Util
 import java.lang.reflect.Field
 
 
@@ -80,19 +85,23 @@ public class SystemTraceTransform extends BaseProxyTransform {
         final TraceBuildConfig traceConfig = initConfig()
         Log.i("Systrace." + getName(), "[transform] isIncremental:%s rootOutput:%s", isIncremental, rootOutput.getAbsolutePath())
         final MappingCollector mappingCollector = new MappingCollector()
-        File mappingFile = new File(traceConfig.getMappingPath());
+        File mappingFile = new File(traceConfig.getMappingPath())
+        //如果存在混淆的话 读取混淆文件 转换为对应数据结构
         if (mappingFile.exists() && mappingFile.isFile()) {
-            MappingReader mappingReader = new MappingReader(mappingFile);
+            MappingReader mappingReader = new MappingReader(mappingFile)
             mappingReader.read(mappingCollector)
         }
 
         Map<File, File> jarInputMap = new HashMap<>()
         Map<File, File> scrInputMap = new HashMap<>()
 
+        //反射替换input中的文件为systrace替换后的文件
         transformInvocation.inputs.each { TransformInput input ->
+            //目录输入
             input.directoryInputs.each { DirectoryInput dirInput ->
                 collectAndIdentifyDir(scrInputMap, dirInput, rootOutput, isIncremental)
             }
+            //jar包输入
             input.jarInputs.each { JarInput jarInput ->
                 if (jarInput.getStatus() != Status.REMOVED) {
                     collectAndIdentifyJar(jarInputMap, scrInputMap, jarInput, rootOutput, isIncremental)
@@ -108,13 +117,22 @@ public class SystemTraceTransform extends BaseProxyTransform {
         Log.i("Systrace." + getName(), "[transform] cost time: %dms", System.currentTimeMillis() - start)
     }
 
+    /**
+     * 目录输入
+     * @param dirInputMap 空map key 输入目录 value 输出目录
+     * @param input 输入
+     * @param rootOutput 输出 classes/SystemTraceTransform
+     * @param isIncremental 是否增量编译
+     */
     private void collectAndIdentifyDir(Map<File, File> dirInputMap, DirectoryInput input, File rootOutput, boolean isIncremental) {
         final File dirInput = input.file
+        //创建对应输出目录 input.file
         final File dirOutput = new File(rootOutput, input.file.getName())
         if (!dirOutput.exists()) {
             dirOutput.mkdirs()
         }
         if (isIncremental) {
+            //增量编译比较复杂
             if (!dirInput.exists()) {
                 dirOutput.deleteDir()
             } else {
@@ -124,6 +142,7 @@ public class SystemTraceTransform extends BaseProxyTransform {
                 input.changedFiles.each { Map.Entry<File, Status> entry ->
                     final File changedFileInput = entry.getKey()
                     final String changedFileInputFullPath = changedFileInput.getAbsolutePath()
+                    //输入目录替换为输出目录
                     final File changedFileOutput = new File(
                             changedFileInputFullPath.replace(rootInputFullPath, rootOutputFullPath)
                     )
@@ -136,6 +155,7 @@ public class SystemTraceTransform extends BaseProxyTransform {
                             dirInputMap.put(changedFileInput, changedFileOutput)
                             break
                         case Status.REMOVED:
+                            //移除该文件
                             changedFileOutput.delete()
                             break
                     }
@@ -149,6 +169,14 @@ public class SystemTraceTransform extends BaseProxyTransform {
         replaceFile(input, dirOutput)
     }
 
+    /**
+     * jar
+     * @param jarInputMaps 空map
+     * @param dirInputMaps 目录输入收集映射信息
+     * @param input 输入
+     * @param rootOutput 输出 classes/SystemTraceTransform
+     * @param isIncremental
+     */
     private void collectAndIdentifyJar(Map<File, File> jarInputMaps, Map<File, File> dirInputMaps, JarInput input, File rootOutput, boolean isIncremental) {
         final File jarInput = input.file
         final File jarOutput = new File(rootOutput, getUniqueJarName(jarInput))
@@ -165,45 +193,6 @@ public class SystemTraceTransform extends BaseProxyTransform {
                 case Status.REMOVED:
                     break
             }
-        } else {
-            // Special case for WeChat AutoDex. Its rootInput jar file is actually
-            // a txt file contains path list.
-            BufferedReader br = null
-            BufferedWriter bw = null
-            try {
-                br = new BufferedReader(new InputStreamReader(new FileInputStream(jarInput)))
-                bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jarOutput)))
-                String realJarInputFullPath
-                while ((realJarInputFullPath = br.readLine()) != null) {
-                    // src jar.
-                    final File realJarInput = new File(realJarInputFullPath)
-                    // dest jar, moved to extraguard intermediate output dir.
-                    final File realJarOutput = new File(rootOutput, getUniqueJarName(realJarInput))
-
-                    if (realJarInput.exists() && Util.isRealZipOrJar(realJarInput)) {
-                        jarInputMaps.put(realJarInput, realJarOutput)
-                    } else {
-                        realJarOutput.delete()
-                        if (realJarInput.exists() && realJarInput.isDirectory()) {
-                            realJarOutput = new File(rootOutput, realJarInput.getName())
-                            if (!realJarOutput.exists()) {
-                                realJarOutput.mkdirs()
-                            }
-                            dirInputMaps.put(realJarInput, realJarOutput)
-                        }
-
-                    }
-                    // write real output full path to the fake jar at rootOutput.
-                    final String realJarOutputFullPath = realJarOutput.getAbsolutePath()
-                    bw.writeLine(realJarOutputFullPath)
-                }
-            } catch (FileNotFoundException e) {
-                Log.e("Systrace." + getName(), "FileNotFoundException:%s", e.toString())
-            } finally {
-                Util.closeQuietly(br)
-                Util.closeQuietly(bw)
-            }
-            jarInput.delete() // delete raw inputList
         }
 
         replaceFile(input, jarOutput)

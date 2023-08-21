@@ -23,6 +23,7 @@ class SystracePlugin implements Plugin<Project> {
         project.afterEvaluate {
             def android = project.extensions.android
             def configuration = project.systrace
+            //遍历所有应用变体
             android.applicationVariants.all { variant ->
                 String output = configuration.output
                 if (Util.isNullOrNil(output)) {

@@ -44,11 +44,21 @@ public abstract class BaseProxyTransform extends Transform {
         }
     }
 
+    /**
+     * 反射替换全量文件为自定义输出目录
+     * @param input
+     * @param newFile
+     */
     protected void replaceFile(QualifiedContent input, File newFile) {
         final Field fileField = ReflectUtil.getDeclaredFieldRecursive(input.getClass(), 'file')
         fileField.set(input, newFile)
     }
 
+    /**
+     * 反射替换增量文件为自定义输出目录
+     * @param dirInput
+     * @param changedFiles
+     */
     protected void replaceChangedFile(DirectoryInput dirInput, Map<File, Status> changedFiles) {
         final Field changedFilesField = ReflectUtil.getDeclaredFieldRecursive(dirInput.getClass(), 'changedFiles')
         changedFilesField.set(dirInput, changedFiles)

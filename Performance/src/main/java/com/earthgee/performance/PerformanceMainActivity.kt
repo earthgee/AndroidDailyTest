@@ -20,7 +20,7 @@ import com.julive.adapter.core.*
 class PerformanceMainActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
-        "Allocation Tracker","Process Tracker","ATrace","PThread"
+        "Allocation Tracker","Process Tracker","ATrace","PThread","AsmTest"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +54,9 @@ class PerformanceMainActivity : AppCompatActivity() {
                     }
                     "PThread" -> {
                         ARouter.getInstance().build("/atrace/threadhook").navigation()
+                    }
+                    "AsmTest" -> {
+                        ARouter.getInstance().build("/atrace/asmtest").navigation()
                     }
                 }
             }

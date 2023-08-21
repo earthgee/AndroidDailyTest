@@ -17,6 +17,8 @@
 package com.earthgee.systrace;
 
 
+import com.earthgee.systrace.retrace.MappingCollector;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,14 +28,21 @@ import java.util.HashSet;
  */
 public class TraceBuildConfig {
     private static final String TAG = "Matrix.TraceBuildConfig";
+    //包名
     private final String mPackageName;
+    //编译混淆proguard 文件
     private final String mMappingPath;
+    //可配置项：systrace.baseMethodMapFile
     private final String mBaseMethodMap;
+    //build/systrace_output/${variantName}.methodmap
     private final String mMethodMapFile;
+    //build/systrace_output/${variantName}.ignoremethodmap
     private final String mIgnoreMethodMapFile;
-
+    //可配置项：systrace.blackListFile
     private final String mBlackListDir;
+    //保留类 混淆后类名
     private final HashSet<String> mBlackClassMap;
+    //保留包
     private final HashSet<String> mBlackPackageMap;
 
     public TraceBuildConfig(String packageName, String mappingPath, String baseMethodMap, String methodMapFile, String ignoreMethodMapFile, String blackListFile) {
@@ -136,6 +145,7 @@ public class TraceBuildConfig {
 
     /**
      * parse the BlackFile in order to pass some class/method
+     * 保留的类可以不被插桩
      * @param processor
      */
     public void parseBlackFile(MappingCollector processor) {
@@ -162,10 +172,11 @@ public class TraceBuildConfig {
                 }
 
                 if (black.startsWith("-keepclass ")) {
+                    //保留类
                     black = black.replace("-keepclass ", "");
                     mBlackClassMap.add(processor.proguardClassName(black, black));
-
                 } else if (black.startsWith("-keeppackage ")) {
+                    //保留包
                     black = black.replace("-keeppackage ", "");
                     mBlackPackageMap.add(black);
                 }
@@ -179,11 +190,13 @@ public class TraceBuildConfig {
     public static class Builder {
         //包名
         public String mPackageName;
-
+        //编译混淆proguard 文件
         public String mMappingPath;
         //systrace.baseMethodMapFile
         public String mBaseMethodMap;
+        //build/systrace_output/${variantName}.methodmap
         public String mMethodMapFile;
+        //build/systrace_output/${variantName}.ignoremethodmap
         public String mIgnoreMethodMapFile;
         //systrace.blackListFile
         public String mBlackListFile;

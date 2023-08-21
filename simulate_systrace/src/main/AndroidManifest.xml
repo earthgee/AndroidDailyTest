@@ -4,6 +4,7 @@
     <application>
         <activity android:name="com.earthgee.systrace.MainActivity" />
         <activity android:name="com.earthgee.systrace.ThreadHookActivity" />
+        <activity android:name="com.earthgee.systrace.asm.AsmTestActivity" />
     </application>
 
 </manifest>
