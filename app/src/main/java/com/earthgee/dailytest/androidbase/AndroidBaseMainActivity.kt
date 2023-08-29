@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.earthgee.dailytest.R
+import com.earthgee.dailytest.sharedpreferenceimpl.TestSharedPreferencesActivity
 import com.julive.adapter.core.*
 
 /**
@@ -18,7 +19,8 @@ import com.julive.adapter.core.*
 class AndroidBaseMainActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
-        "Simple Aidl"
+        "Simple Aidl",
+        "Custom SharedPreferences"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +48,14 @@ class AndroidBaseMainActivity : AppCompatActivity() {
                             Intent(
                                 this@AndroidBaseMainActivity,
                                 AidlClientActivity::class.java
+                            )
+                        )
+                    }
+                    "Custom SharedPreferences" -> {
+                        startActivity(
+                            Intent(
+                                this@AndroidBaseMainActivity,
+                                TestSharedPreferencesActivity::class.java
                             )
                         )
                     }

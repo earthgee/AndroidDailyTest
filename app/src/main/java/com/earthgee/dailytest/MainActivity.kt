@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
         ItemModule("Android Base", "/base/aidl"),
-        ItemModule("Performance", "/performance/main")
+        ItemModule("Performance", "/performance/main"),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
