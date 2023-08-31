@@ -3,7 +3,7 @@ package com.earthgee.performance.allocationtracker;
 /**
  * Created by zhaoruixuan1 on 2023/8/10
  * CopyRight (c) haodf.com
- * 功能：
+ * 功能：inline hook
  */
 public class AllocTracker {
 

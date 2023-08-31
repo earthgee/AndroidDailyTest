@@ -3,7 +3,7 @@ package com.earthgee.systrace;
 /**
  * Created by zhaoruixuan1 on 2023/8/11
  * CopyRight (c) haodf.com
- * 功能：
+ * 功能：plt hook
  */
 public class ATrace {
 
@@ -42,7 +42,13 @@ public class ATrace {
         enableThreadHookNative();
     }
 
+    public static void enableSocketHook() {
+        enableSocketHookNative();
+    }
+
     private static native void enableThreadHookNative();
+
+    private static native void enableSocketHookNative();
 
     public static String getStack() {
         return stackTraceToString(new Throwable().getStackTrace());
