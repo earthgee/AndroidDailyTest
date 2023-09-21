@@ -66,7 +66,7 @@ dependencies {
     kapt 'com.github.jadepeakpoet.ARouter:arouter-compiler:1.0.2'
 
     implementation project(':Performance')
-
+    implementation project(':kotlin')
 }
 
 apply plugin: 'com.earthgee.systrace'

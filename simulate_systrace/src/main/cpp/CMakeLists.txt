@@ -25,7 +25,6 @@ include_directories(linker)
 
 add_library( # Sets the name of the library.
         simulate_systrace
-
         # Sets the library as a shared library.
         SHARED
 
