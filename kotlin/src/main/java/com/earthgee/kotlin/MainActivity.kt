@@ -12,7 +12,7 @@ import kotlin.text.StringBuilder
  *  CopyRight (c) haodf.com
  *  功能：
  */
-@Route(path = "/kotlin/main")
+
 class MainActivity : AppCompatActivity(){
 
     private lateinit var binding : KotlinActivityMainBinding
