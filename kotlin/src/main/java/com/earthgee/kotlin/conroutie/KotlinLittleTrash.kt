@@ -9,6 +9,13 @@ import kotlinx.coroutines.*
  */
 class KotlinLittleTrash {
 
+    var counter = 0
+        set(value) {
+            if(value >= 3) {
+                field = value
+            }
+        }
+
     fun main() = testAsync()
 
     private fun testJobJoin() = runBlocking {
