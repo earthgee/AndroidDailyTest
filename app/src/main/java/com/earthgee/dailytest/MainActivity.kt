@@ -17,7 +17,8 @@ class MainActivity : AppCompatActivity() {
     val mainItemList = arrayListOf(
         ItemModule("Android Base", "/base/aidl"),
         ItemModule("Performance", "/performance/main"),
-        ItemModule("Kotlin", "/kotlin/main")
+        ItemModule("Kotlin", "/kotlin/main"),
+        ItemModule("Camera", "/camera/main")
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
