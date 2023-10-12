@@ -17,7 +17,9 @@ import com.earthgee.camera.base.CameraViewImpl;
 import com.earthgee.camera.base.Constants;
 import com.earthgee.camera.base.PreviewImpl;
 import com.earthgee.camera.camera1.Camera1;
+import com.earthgee.camera.camera1.SurfaceViewPreview;
 import com.earthgee.camera.camera1.TextureViewPreview;
+import com.earthgee.camera.camera2.Camera2;
 
 import java.util.ArrayList;
 
@@ -59,7 +61,8 @@ public class CameraView extends FrameLayout {
         super(context, attrs, defStyleAttr);
         final PreviewImpl preview = createPreviewImpl(context);
         mCallbacks = new CallbackBridge();
-        mImpl = new Camera1(mCallbacks, preview);
+//        mImpl = new Camera1(mCallbacks, preview);
+        mImpl = new Camera2(mCallbacks, preview, context);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraView);
         mAdjustViewBounds = a.getBoolean(R.styleable.CameraView_android_adjustViewBounds, false);
@@ -86,9 +89,9 @@ public class CameraView extends FrameLayout {
     private PreviewImpl createPreviewImpl(Context context) {
         PreviewImpl preview;
         //if (Build.VERSION.SDK_INT >= 23) {
-        //    preview = new SurfaceViewPreview(context, this);
+            preview = new SurfaceViewPreview(context, this);
         //} else {
-        preview = new TextureViewPreview(context, this);
+//        preview = new TextureViewPreview(context, this);
         //}
         return preview;
     }
@@ -151,9 +154,11 @@ public class CameraView extends FrameLayout {
         }
     }
 
-    //todo camera2
     public void start() {
-        mImpl.start();
+        if(!mImpl.start()) {
+            mImpl=new Camera1(mCallbacks, createPreviewImpl(getContext()));
+            mImpl.start();
+        }
     }
 
     public void stop() {
