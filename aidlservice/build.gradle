@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.earthgee.aidlservice'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.earthgee.aidlservice"
         minSdk 21
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -19,7 +19,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true   //开启混淆
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

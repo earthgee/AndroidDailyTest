@@ -1,5 +1,7 @@
 package com.earthgee.systrace;
 
+import androidx.annotation.Keep;
+
 /**
  * Created by zhaoruixuan1 on 2023/8/11
  * CopyRight (c) haodf.com
@@ -33,8 +35,10 @@ public class ATrace {
         SystraceReflector.updateSystraceTags();
     }
 
+    @Keep
     private static native boolean installSystraceHook();
 
+    @Keep
     private static native void enableSystraceNative();
 
     //线程监控
@@ -46,8 +50,10 @@ public class ATrace {
         enableSocketHookNative();
     }
 
+    @Keep
     private static native void enableThreadHookNative();
 
+    @Keep
     private static native void enableSocketHookNative();
 
     public static String getStack() {

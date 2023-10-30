@@ -2,16 +2,9 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
 }
-apply plugin: 'kotlin-kapt'
-
-kapt {
-    arguments {
-        arg("AROUTER_MODULE_NAME", project.getName())
-    }
-}
 
 android {
-    namespace 'com.earthgee.simulate_systrace'
+    namespace 'com.earthgee.base'
     compileSdk 33
 
     defaultConfig {
@@ -20,22 +13,12 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-        externalNativeBuild {
-            cmake {
-                abiFilters "armeabi-v7a","x86"
-            }
-        }
     }
 
     buildTypes {
         release {
             minifyEnabled true   //开启混淆
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-    externalNativeBuild {
-        cmake {
-            path "src/main/cpp/CMakeLists.txt"
         }
     }
     compileOptions {
@@ -51,13 +34,8 @@ dependencies {
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.10.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-
-    //arouter
-    implementation 'com.github.jadepeakpoet.ARouter:arouter-api:1.0.2'
-    kapt 'com.github.jadepeakpoet.ARouter:arouter-compiler:1.0.2'
-
 }

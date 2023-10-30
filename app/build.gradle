@@ -24,14 +24,28 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         //arouter
+    }
 
-
+    signingConfigs {
+        release {
+            storeFile file('com.earthgee.dailytest.jks')
+            storePassword '654321'
+            keyAlias 'dailytest'
+            keyPassword '654321'
+            v2SigningEnabled true
+        }
     }
 
     buildTypes {
+        debug {
+            minifyEnabled false   //开启混淆
+            signingConfig signingConfigs.release
+        }
         release {
-            minifyEnabled false
+            minifyEnabled true   //开启混淆
+            shrinkResources true  //移出无用资源
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
