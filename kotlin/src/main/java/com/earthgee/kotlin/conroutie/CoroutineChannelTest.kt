@@ -6,7 +6,6 @@ import kotlinx.coroutines.runBlocking
 
 /**
  *  Created by zhaoruixuan1 on 2023/9/26
- *  CopyRight (c) haodf.com
  *  功能：
  */
 fun main(vararg: Array<String>) = runBlocking {

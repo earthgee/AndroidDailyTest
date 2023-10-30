@@ -15,7 +15,7 @@ import java.io.File
 
 /**
  *  Created by zhaoruixuan1 on 2023/10/9
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：
  */
 @Route(path = "/camera/main")

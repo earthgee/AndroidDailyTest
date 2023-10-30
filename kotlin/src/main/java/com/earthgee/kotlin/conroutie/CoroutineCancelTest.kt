@@ -4,7 +4,7 @@ import kotlinx.coroutines.*
 
 /**
  *  Created by zhaoruixuan1 on 2023/9/27
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：
  */
 fun main() = testCancelAndCatching()

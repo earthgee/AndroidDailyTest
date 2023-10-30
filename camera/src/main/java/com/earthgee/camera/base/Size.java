@@ -2,7 +2,7 @@ package com.earthgee.camera.base;
 
 /**
  * Created by zhaoruixuan1 on 2023/10/7
- * CopyRight (c) haodf.com
+ * test
  * 功能：
  */
 public class Size implements Comparable<Size> {

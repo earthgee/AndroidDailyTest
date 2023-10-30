@@ -16,6 +16,9 @@
 
 package com.earthgee.systrace.retrace;
 
+
+import com.earhtgee.systrace.javautil.Log;
+
 import org.objectweb.asm.Type;
 
 import java.util.HashMap;
@@ -24,27 +27,35 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+
 /**
  * Created by caichongyang on 2017/8/3.
  */
 public class MappingCollector implements MappingProcessor {
     private final static String TAG = "MappingCollector";
     private final static int DEFAULT_CAPACITY = 2000;
-    //key 混淆后类名 value 原始类名
+    //key 混淆类名 value 原始类名
     public HashMap<String, String> mObfuscatedRawClassMap = new HashMap<>(DEFAULT_CAPACITY);
-    //key 原始类名 value 混淆后类名
+    //key 原始类名 value 混淆类名
     public HashMap<String, String> mRawObfuscatedClassMap = new HashMap<>(DEFAULT_CAPACITY);
-    //混淆方法map
-    //key 混淆后类名 key 混淆后方法名 Set<MethodInfo> 方法列表 MethodInfo 原始类名 原始方法名
+    //key 原始包名 value 混淆包名
+    public HashMap<String, String> mRawObfuscatedPackageMap = new HashMap<>(DEFAULT_CAPACITY);
+    //混淆类方法表 key 混淆后类名 value key 混淆后方法名 value 原始类名 方法返回类型 原始方法名 方法参数
     private final Map<String, Map<String, Set<MethodInfo>>> mObfuscatedClassMethodMap = new HashMap<>();
-    //原始方法map
-    //key 原始类名 key 原始方法名 Set<MethodInfo> 方法列表 MethodInfo 新类名 新方法名
+    //原始类方法表 key 原始类名 value key 原始方法名 value 混淆后类名 方法返回类型 混淆后方法名 方法参数
     private final Map<String, Map<String, Set<MethodInfo>>> mOriginalClassMethodMap = new HashMap<>();
 
     @Override
     public boolean processClassMapping(String className, String newClassName) {
         this.mObfuscatedRawClassMap.put(newClassName, className);
         this.mRawObfuscatedClassMap.put(className, newClassName);
+        int classNameLen = className.lastIndexOf('.');
+        int newClassNameLen = newClassName.lastIndexOf('.');
+        if (classNameLen > 0 && newClassNameLen > 0) {
+            this.mRawObfuscatedPackageMap.put(className.substring(0, classNameLen), newClassName.substring(0, newClassNameLen));
+        } else {
+            Log.e(TAG, "class without package name: %s -> %s, pls check input mapping", className, newClassName);
+        }
         return true;
     }
 
@@ -52,15 +63,14 @@ public class MappingCollector implements MappingProcessor {
      * mapping the method name.
      *
      * @param className          the original class name. 原始类名
-     * @param methodReturnType   the original external method return type.  原始方法返回类型
-     * @param methodName         the original external method name. 原始方法名称
+     * @param methodReturnType   the original external method return type. 原始方法返回类型
+     * @param methodName         the original external method name. 原始方法名
      * @param methodArguments    the original external method arguments. 原始方法参数
-     * @param newClassName       the new class name. 新类名（？？？实际使用的还是原始类名）
-     * @param newMethodName      the new method name. 映射后方法名
+     * @param newClassName       the new class name. 新类名（代码中仍是原始类名），待观察日志
+     * @param newMethodName      the new method name. 混淆后方法名
      */
     @Override
     public void processMethodMapping(String className, String methodReturnType, String methodName, String methodArguments, String newClassName, String newMethodName) {
-        //获取映射后类名
         newClassName = mRawObfuscatedClassMap.get(className);
         Map<String, Set<MethodInfo>> methodMap = mObfuscatedClassMethodMap.get(newClassName);
         if (methodMap == null) {
@@ -73,6 +83,9 @@ public class MappingCollector implements MappingProcessor {
             methodMap.put(newMethodName, methodSet);
         }
         methodSet.add(new MethodInfo(className, methodReturnType, methodName, methodArguments));
+        if(methodSet.size() > 1) {
+            Log.i(TAG, "processMethodMapping,mObfuscatedClassMethodMap oversize");
+        }
 
         Map<String, Set<MethodInfo>> methodMap2 = mOriginalClassMethodMap.get(className);
         if (methodMap2 == null) {
@@ -85,7 +98,9 @@ public class MappingCollector implements MappingProcessor {
             methodMap2.put(methodName, methodSet2);
         }
         methodSet2.add(new MethodInfo(newClassName, methodReturnType, newMethodName, methodArguments));
-
+        if(methodSet2.size() > 1) {
+            Log.i(TAG, "processMethodMapping,mOriginalClassMethodMap oversize");
+        }
     }
 
     public String originalClassName(String proguardClassName, String defaultClassName) {
@@ -104,12 +119,20 @@ public class MappingCollector implements MappingProcessor {
         }
     }
 
+    public String proguardPackageName(String originalPackage, String defaultPackage) {
+        if (mRawObfuscatedPackageMap.containsKey(originalPackage)) {
+            return mRawObfuscatedPackageMap.get(originalPackage);
+        } else {
+            return defaultPackage;
+        }
+    }
+
     /**
      * get original method info
      *
-     * @param obfuscatedClassName 混淆的类名
-     * @param obfuscatedMethodName 混淆的方法名
-     * @param obfuscatedMethodDesc 混淆的方法描述
+     * @param obfuscatedClassName
+     * @param obfuscatedMethodName
+     * @param obfuscatedMethodDesc
      * @return
      */
     public MethodInfo originalMethodInfo(String obfuscatedClassName, String obfuscatedMethodName, String obfuscatedMethodDesc) {
@@ -142,13 +165,12 @@ public class MappingCollector implements MappingProcessor {
     /**
      * get obfuscated method info
      *
-     * @param originalClassName 原始类名
-     * @param originalMethodName 原始方法名
-     * @param originalMethodDesc 原始方法签名
+     * @param originalClassName
+     * @param originalMethodName
+     * @param originalMethodDesc
      * @return
      */
     public MethodInfo obfuscatedMethodInfo(String originalClassName, String originalMethodName, String originalMethodDesc) {
-        //混淆后的方法描述
         DescInfo descInfo = parseMethodDesc(originalMethodDesc, true);
 
         // Class name -> obfuscated method names.
@@ -161,9 +183,7 @@ public class MappingCollector implements MappingProcessor {
                 while (methodInfoIterator.hasNext()) {
                     MethodInfo methodInfo = methodInfoIterator.next();
                     MethodInfo newMethodInfo = new MethodInfo(methodInfo);
-                    //对methodInfo进行混淆
                     obfuscatedMethodInfo(newMethodInfo);
-                    //查找到匹配的方法，赋值desc
                     if (newMethodInfo.matches(descInfo.returnType, descInfo.arguments)) {
                         newMethodInfo.setDesc(descInfo.desc);
                         return newMethodInfo;
@@ -179,11 +199,9 @@ public class MappingCollector implements MappingProcessor {
 
     private void obfuscatedMethodInfo(MethodInfo methodInfo) {
         String methodArguments = methodInfo.getOriginalArguments();
-        //参数列表,以,分隔
         String[] args = methodArguments.split(",");
         StringBuffer stringBuffer = new StringBuffer();
         for (String str : args) {
-            //只保留类名
             String key = str.replace("[", "").replace("]", "");
             if (mRawObfuscatedClassMap.containsKey(key)) {
                 stringBuffer.append(str.replace(key, mRawObfuscatedClassMap.get(key)));
@@ -206,16 +224,14 @@ public class MappingCollector implements MappingProcessor {
 
     /**
      * parse method desc
-     * 解析方法签名
+     *
      * @param desc
-     * @param isRawToObfuscated 是否对结果进行混淆处理
+     * @param isRawToObfuscated
      * @return
      */
     private DescInfo parseMethodDesc(String desc, boolean isRawToObfuscated) {
         DescInfo descInfo = new DescInfo();
-        //签名中参数获取
         Type[] argsObj = Type.getArgumentTypes(desc);
-        //进行混淆或反混淆的处理
         StringBuffer argumentsBuffer = new StringBuffer();
         StringBuffer descBuffer = new StringBuffer();
         descBuffer.append('(');
@@ -280,14 +296,10 @@ public class MappingCollector implements MappingProcessor {
 
     /**
      * about method desc info
-     * 进行过混淆或反混淆处理
      */
     private static class DescInfo {
-        //描述
         private String desc;
-        //参数列表,以,分隔
         private String arguments;
-        //返回类型
         private String returnType;
 
         public void setArguments(String arguments) {

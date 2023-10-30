@@ -3,7 +3,7 @@
 buildscript {
 
     dependencies {
-        classpath ("com.earthgee.systrace:systrace-gradle-plugin:1.0") { changing = true }
+//        classpath ("com.earthgee.systrace:systrace-gradle-plugin:1.0") { changing = true }
     }
 
 }

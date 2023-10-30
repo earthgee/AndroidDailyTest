@@ -11,7 +11,7 @@ import java.io.File
 
 /**
  *  Created by zhaoruixuan1 on 2023/8/10
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：通过inline hook监控java/kotlin对象分配，并写入文件中，附带DumpPrinter可以对文件进行解析.
  */
 class IntroActivity : AppCompatActivity(){

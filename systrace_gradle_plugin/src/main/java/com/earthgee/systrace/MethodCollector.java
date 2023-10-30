@@ -1,23 +1,10 @@
-/*
- * Tencent is pleased to support the open source community by making wechat-matrix available.
- * Copyright (C) 2018 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the BSD 3-Clause License (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://opensource.org/licenses/BSD-3-Clause
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.earthgee.systrace;
 
-import com.earthgee.systrace.item.TraceMethod;
-import com.earthgee.systrace.retrace.MappingCollector;
+
+import com.earhtgee.systrace.compat.AgpCompat;
+import com.earhtgee.systrace.item.TraceMethod;
+import com.earhtgee.systrace.javautil.Log;
+import com.earhtgee.systrace.retrace.MappingCollector;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -38,113 +25,195 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-//项目方法采集
+/**
+ * 方法采集，根据输入文件分为需要插桩的方法表和不需要插桩的方法表
+ */
 public class MethodCollector {
 
-    private static final String TAG = "Matrix.MethodCollector";
-    //key 方法名
-    //插桩的信息
-    private final HashMap<String, TraceMethod> mCollectedMethodMap;
-    //忽略插桩方法表
-    private final HashMap<String, TraceMethod> mCollectedIgnoreMethodMap;
-    //白名单方法表
-    private final HashMap<String, TraceMethod> mCollectedBlackMethodMap;
-    //asm遍历到的继承关系 key 类 value 父类
-    private final HashMap<String, String> mCollectedClassExtendMap;
+    private static final String TAG = "MethodCollector";
 
-    private final TraceBuildConfig mTraceConfig;
-    private final AtomicInteger mMethodId = new AtomicInteger(0);
-    private final MappingCollector mMappingCollector;
-    private int mIncrementCount, mIgnoreCount;
+    private final ExecutorService executor;
+    private final MappingCollector mappingCollector;
 
-    public MethodCollector(TraceBuildConfig config, MappingCollector mappingCollector) {
-        this.mCollectedMethodMap = new HashMap<>();
-        this.mCollectedClassExtendMap = new HashMap<>();
-        this.mCollectedIgnoreMethodMap = new HashMap<>();
-        this.mCollectedBlackMethodMap = new HashMap<>();
-        this.mTraceConfig = config;
-        this.mMappingCollector = mappingCollector;
+    //类继承关系表 key 子类 value 父类
+    private final ConcurrentHashMap<String, String> collectedClassExtendMap = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<String, TraceMethod> collectedIgnoreMethodMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, TraceMethod> collectedMethodMap;
+    private final Configuration configuration;
+    private final AtomicInteger methodId;
+    private final AtomicInteger ignoreCount = new AtomicInteger();
+    private final AtomicInteger incrementCount = new AtomicInteger();
+
+    /**
+     * @param executor
+     * @param mappingCollector 混淆映射类
+     * @param methodId 自增方法id
+     * @param configuration
+     * @param collectedMethodMap 声明配置插桩表(目前为空)
+     */
+    public MethodCollector(ExecutorService executor, MappingCollector mappingCollector, AtomicInteger methodId,
+                           Configuration configuration, ConcurrentHashMap<String, TraceMethod> collectedMethodMap) {
+        this.executor = executor;
+        this.mappingCollector = mappingCollector;
+        this.configuration = configuration;
+        this.methodId = methodId;
+        this.collectedMethodMap = collectedMethodMap;
     }
 
-    public HashMap<String, String> getCollectedClassExtendMap() {
-        return mCollectedClassExtendMap;
+    public ConcurrentHashMap<String, String> getCollectedClassExtendMap() {
+        return collectedClassExtendMap;
+    }
+
+    public ConcurrentHashMap<String, TraceMethod> getCollectedMethodMap() {
+        return collectedMethodMap;
     }
 
     /**
-     * 从输入文件中收集所有方法
-     * @param srcFolderList 目录输入(原始)
-     * @param dependencyJarList 依赖jar输入(原始)
-     * @return
+     *
+     * @param srcFolderList 目录输入
+     * @param dependencyJarList jar输入
+     * @throws ExecutionException
+     * @throws InterruptedException
      */
-    public HashMap collect(List<File> srcFolderList, List<File> dependencyJarList) {
-        mTraceConfig.parseBlackFile(mMappingCollector);
+    public void collect(Set<File> srcFolderList, Set<File> dependencyJarList) throws ExecutionException, InterruptedException {
+        List<Future> futures = new LinkedList<>();
 
-        File originMethodMapFile = new File(mTraceConfig.getBaseMethodMap());
-        getMethodFromBaseMethod(originMethodMapFile);
-        Log.i(TAG, "[collect] %s method from %s", mCollectedMethodMap.size(), mTraceConfig.getBaseMethodMap());
-        //收集Debug.methodmap 后做全面混淆
-        retraceMethodMap(mMappingCollector, mCollectedMethodMap);
+        for (File srcFile : srcFolderList) {
+            ArrayList<File> classFileList = new ArrayList<>();
+            if (srcFile.isDirectory()) {
+                listClassFiles(classFileList, srcFile);
+            } else {
+                classFileList.add(srcFile);
+            }
 
-        collectMethodFromSrc(srcFolderList, true);
-        collectMethodFromJar(dependencyJarList, true);
-        collectMethodFromSrc(srcFolderList, false);
-        collectMethodFromJar(dependencyJarList, false);
-        Log.i(TAG, "[collect] incrementCount:%s ignoreMethodCount:%s", mIncrementCount, mIgnoreCount);
+            for (File classFile : classFileList) {
+                futures.add(executor.submit(new CollectSrcTask(classFile)));
+            }
+        }
 
-        saveCollectedMethod(mMappingCollector);
-        saveIgnoreCollectedMethod(mMappingCollector);
+        for (File jarFile : dependencyJarList) {
+            futures.add(executor.submit(new CollectJarTask(jarFile)));
+        }
 
-        return mCollectedMethodMap;
+        for (Future future : futures) {
+            future.get();
+        }
+        futures.clear();
+
+        futures.add(executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                saveIgnoreCollectedMethod(mappingCollector);
+            }
+        }));
+
+        futures.add(executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                saveCollectedMethod(mappingCollector);
+            }
+        }));
+
+        for (Future future : futures) {
+            future.get();
+        }
+        futures.clear();
 
     }
 
-    private void retraceMethodMap(MappingCollector processor, HashMap<String, TraceMethod> methodMap) {
-        if (null == processor || null == methodMap) {
-            return;
-        }
-        HashMap<String, TraceMethod> retraceMethodMap = new HashMap<>(methodMap.size());
-        for (Map.Entry<String, TraceMethod> entry : methodMap.entrySet()) {
-            TraceMethod traceMethod = entry.getValue();
-            //对收集的方法 类型 参数 签名做全面的混淆
-            traceMethod.proguard(processor);
-            retraceMethodMap.put(traceMethod.getMethodName(), traceMethod);
-        }
-        methodMap.clear();
-        methodMap.putAll(retraceMethodMap);
-        retraceMethodMap.clear();
+    //解析单个class文件
+    class CollectSrcTask implements Runnable {
 
+        File classFile;
+
+        CollectSrcTask(File classFile) {
+            this.classFile = classFile;
+        }
+
+        @Override
+        public void run() {
+            InputStream is = null;
+            try {
+                is = new FileInputStream(classFile);
+                ClassReader classReader = new ClassReader(is);
+                ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+                ClassVisitor visitor = new TraceClassAdapter(AgpCompat.getAsmApi(), classWriter, "");
+                classReader.accept(visitor, 0);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    is.close();
+                } catch (Exception e) {
+                }
+            }
+        }
     }
+
+    //解析单个jar文件
+    class CollectJarTask implements Runnable {
+
+        File fromJar;
+
+        CollectJarTask(File jarFile) {
+            this.fromJar = jarFile;
+        }
+
+        @Override
+        public void run() {
+            ZipFile zipFile = null;
+
+            try {
+                zipFile = new ZipFile(fromJar);
+                Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
+                while (enumeration.hasMoreElements()) {
+                    ZipEntry zipEntry = enumeration.nextElement();
+                    String zipEntryName = zipEntry.getName();
+                    if (isNeedTraceFile(zipEntryName)) {
+                        InputStream inputStream = zipFile.getInputStream(zipEntry);
+                        ClassReader classReader = new ClassReader(inputStream);
+                        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+                        ClassVisitor visitor = new TraceClassAdapter(AgpCompat.getAsmApi(), classWriter, fromJar.getAbsolutePath());
+                        classReader.accept(visitor, 0);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    zipFile.close();
+                } catch (Exception e) {
+                    Log.e(TAG, "close stream err! fromJar:%s", fromJar.getAbsolutePath());
+                }
+            }
+        }
+    }
+
 
     private void saveIgnoreCollectedMethod(MappingCollector mappingCollector) {
-        File methodMapFile = new File(mTraceConfig.getIgnoreMethodMapFile());
+
+        File methodMapFile = new File(configuration.ignoreMethodMapFilePath);
         if (!methodMapFile.getParentFile().exists()) {
             methodMapFile.getParentFile().mkdirs();
         }
         List<TraceMethod> ignoreMethodList = new ArrayList<>();
-        ignoreMethodList.addAll(mCollectedIgnoreMethodMap.values());
-        Log.i(TAG, "[saveIgnoreCollectedMethod] size:%s path:%s", mCollectedIgnoreMethodMap.size(), methodMapFile.getAbsolutePath());
-
-        List<TraceMethod> blackMethodList = new ArrayList<>();
-        blackMethodList.addAll(mCollectedBlackMethodMap.values());
-        Log.i(TAG, "[saveIgnoreBlackMethod] size:%s path:%s", mCollectedBlackMethodMap.size(), methodMapFile.getAbsolutePath());
+        ignoreMethodList.addAll(collectedIgnoreMethodMap.values());
+        Log.i(TAG, "[saveIgnoreCollectedMethod] size:%s path:%s", collectedIgnoreMethodMap.size(), methodMapFile.getAbsolutePath());
 
         Collections.sort(ignoreMethodList, new Comparator<TraceMethod>() {
-            @Override
-            public int compare(TraceMethod o1, TraceMethod o2) {
-                return o1.className.compareTo(o2.className);
-            }
-        });
-
-        Collections.sort(blackMethodList, new Comparator<TraceMethod>() {
             @Override
             public int compare(TraceMethod o1, TraceMethod o2) {
                 return o1.className.compareTo(o2.className);
@@ -161,13 +230,6 @@ public class MethodCollector {
                 traceMethod.revert(mappingCollector);
                 pw.println(traceMethod.toIgnoreString());
             }
-            pw.println("");
-            pw.println("black methods:");
-            for (TraceMethod traceMethod : blackMethodList) {
-                traceMethod.revert(mappingCollector);
-                pw.println(traceMethod.toIgnoreString());
-            }
-
         } catch (Exception e) {
             Log.e(TAG, "write method map Exception:%s", e.getMessage());
             e.printStackTrace();
@@ -181,13 +243,19 @@ public class MethodCollector {
 
 
     private void saveCollectedMethod(MappingCollector mappingCollector) {
-        File methodMapFile = new File(mTraceConfig.getMethodMapFile());
+        File methodMapFile = new File(configuration.methodMapFilePath);
         if (!methodMapFile.getParentFile().exists()) {
             methodMapFile.getParentFile().mkdirs();
         }
         List<TraceMethod> methodList = new ArrayList<>();
-        methodList.addAll(mCollectedMethodMap.values());
-        Log.i(TAG, "[saveCollectedMethod] size:%s path:%s", mCollectedMethodMap.size(), methodMapFile.getAbsolutePath());
+
+        TraceMethod extra = TraceMethod.create(TraceBuildConstants.METHOD_ID_DISPATCH, Opcodes.ACC_PUBLIC, "android.os.Handler",
+                "dispatchMessage", "(Landroid.os.Message;)V");
+        collectedMethodMap.put(extra.getMethodName(), extra);
+
+        methodList.addAll(collectedMethodMap.values());
+
+        Log.i(TAG, "[saveCollectedMethod] size:%s incrementCount:%s path:%s", collectedMethodMap.size(), incrementCount.get(), methodMapFile.getAbsolutePath());
 
         Collections.sort(methodList, new Comparator<TraceMethod>() {
             @Override
@@ -216,227 +284,63 @@ public class MethodCollector {
         }
     }
 
-    //从目录输入中采集所有方法
-    private void collectMethodFromSrc(List<File> srcFolderList, boolean isSingle) {
-        if (null != srcFolderList) {
-            for (File srcFile : srcFolderList) {
-                innerCollectMethodFromSrc(srcFile, isSingle);
-            }
-        }
-    }
-
-    //从jar中采集所有方法
-    private void collectMethodFromJar(List<File> dependencyJarList, boolean isSingle) {
-        if (null != dependencyJarList) {
-            for (File jarFile : dependencyJarList) {
-                innerCollectMethodFromJar(jarFile, isSingle);
-            }
-        }
-
-    }
-
     /**
-     * 解析可配置项：systrace.baseMethodMapFile
-     * ${project.buildDir}/systrace_output/Debug.methodmap
-     * @param baseMethodFile
+     * asm解析
      */
-    private void getMethodFromBaseMethod(File baseMethodFile) {
-        if (!baseMethodFile.exists()) {
-            Log.w(TAG, "[getMethodFromBaseMethod] not exist!%s", baseMethodFile.getAbsolutePath());
-            return;
-        }
-        Scanner fileReader = null;
-        try {
-            fileReader = new Scanner(baseMethodFile, "UTF-8");
-            while (fileReader.hasNext()) {
-                String nextLine = fileReader.nextLine();
-                if (!Util.isNullOrNil(nextLine)) {
-                    nextLine = nextLine.trim();
-                    if (nextLine.startsWith("#")) {
-                        Log.i("[getMethodFromBaseMethod] comment %s", nextLine);
-                        continue;
-                    }
-                    String[] fields = nextLine.split(",");
-                    TraceMethod traceMethod = new TraceMethod();
-                    traceMethod.id = Integer.parseInt(fields[0]);
-                    traceMethod.accessFlag = Integer.parseInt(fields[1]);
-                    String[] methodField = fields[2].split(" ");
-                    traceMethod.className = methodField[0].replace("/", ".");
-                    traceMethod.methodName = methodField[1];
-                    if (methodField.length > 2) {
-                        traceMethod.desc = methodField[2].replace("/", ".");
-                    }
-                    if (mMethodId.get() < traceMethod.id) {
-                        mMethodId.set(traceMethod.id);
-                    }
-                    if (mTraceConfig.isNeedTrace(traceMethod.className, mMappingCollector)) {
-                        mCollectedMethodMap.put(traceMethod.getMethodName(), traceMethod);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "[getMethodFromBaseMethod] err!");
-        } finally {
-            if (fileReader != null) {
-                fileReader.close();
-            }
-        }
-    }
-
-    //从目录输入中采集所有方法
-    private void innerCollectMethodFromSrc(File srcFile, boolean isSingle) {
-        ArrayList<File> classFileList = new ArrayList<>();
-        if (srcFile.isDirectory()) {
-            listClassFiles(classFileList, srcFile);
-        } else {
-            classFileList.add(srcFile);
-        }
-
-        for (File classFile : classFileList) {
-            InputStream is = null;
-            try {
-                is = new FileInputStream(classFile);
-                ClassReader classReader = new ClassReader(is);
-                ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-                ClassVisitor visitor;
-                if (isSingle) {
-                    //只遍历类
-                    visitor = new SingleTraceClassAdapter(Opcodes.ASM5, classWriter);
-                } else {
-                    //进行真正的插桩
-                    visitor = new TraceClassAdapter(Opcodes.ASM5, classWriter);
-                }
-                classReader.accept(visitor, 0);
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    is.close();
-                } catch (Exception e) {
-                    // ignore
-                }
-            }
-        }
-    }
-
-    private void innerCollectMethodFromJar(File fromJar, boolean isSingle) {
-        ZipFile zipFile = null;
-
-        try {
-            zipFile = new ZipFile(fromJar);
-            Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
-            while (enumeration.hasMoreElements()) {
-                ZipEntry zipEntry = enumeration.nextElement();
-                String zipEntryName = zipEntry.getName();
-                if (mTraceConfig.isNeedTraceClass(zipEntryName)) {
-                    InputStream inputStream = zipFile.getInputStream(zipEntry);
-                    ClassReader classReader = new ClassReader(inputStream);
-                    ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-                    ClassVisitor visitor;
-                    if (isSingle) {
-                        visitor = new SingleTraceClassAdapter(Opcodes.ASM5, classWriter);
-                    } else {
-                        visitor = new TraceClassAdapter(Opcodes.ASM5, classWriter);
-                    }
-                    classReader.accept(visitor, 0);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                zipFile.close();
-            } catch (Exception e) {
-                Log.e(TAG, "close stream err! fromJar:%s", fromJar.getAbsolutePath());
-            }
-        }
-    }
-
-
-    private void listClassFiles(ArrayList<File> classFiles, File folder) {
-        File[] files = folder.listFiles();
-        if (null == files) {
-            Log.e(TAG, "[listClassFiles] files is null! %s", folder.getAbsolutePath());
-            return;
-        }
-        for (File file : files) {
-            if (file == null) {
-                continue;
-            }
-            if (file.isDirectory()) {
-                listClassFiles(classFiles, file);
-            } else {
-                if (null != file && file.isFile() && mTraceConfig.isNeedTraceClass(file.getName())) {
-                    classFiles.add(file);
-                }
-
-            }
-        }
-    }
-
-    private class SingleTraceClassAdapter extends ClassVisitor {
-
-        SingleTraceClassAdapter(int i, ClassVisitor classVisitor) {
-            super(i, classVisitor);
-        }
-
-        @Override
-        public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-            super.visit(version, access, name, signature, superName, interfaces);
-            mCollectedClassExtendMap.put(name, superName);
-        }
-
-    }
-
-
     private class TraceClassAdapter extends ClassVisitor {
         private String className;
-        //抽象类或接口
         private boolean isABSClass = false;
+        private boolean hasWindowFocusMethod = false;
+        private int version;
 
-        TraceClassAdapter(int i, ClassVisitor classVisitor) {
+        private String jarPath;
+
+        TraceClassAdapter(int i, ClassVisitor classVisitor, String jarPath) {
             super(i, classVisitor);
+            this.jarPath = jarPath;
         }
 
         @Override
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
             super.visit(version, access, name, signature, superName, interfaces);
+            this.version = version;
             this.className = name;
+            if(className == null || className == "") {
+                Log.e(TAG, "TraceClassAdapter visit,className=null,jarPath="+jarPath);
+            }
             if ((access & Opcodes.ACC_ABSTRACT) > 0 || (access & Opcodes.ACC_INTERFACE) > 0) {
                 this.isABSClass = true;
             }
-            mCollectedClassExtendMap.put(className, superName);
-
+            collectedClassExtendMap.put(className, superName);
         }
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc,
                                          String signature, String[] exceptions) {
             if (isABSClass) {
-                //抽象类不进行插桩
+                //抽象类或接口，不进行插桩
                 return super.visitMethod(access, name, desc, signature, exceptions);
             } else {
-                return new CollectMethodNode(className, access, name, desc, signature, exceptions);
+                if (!hasWindowFocusMethod) {
+                    hasWindowFocusMethod = isWindowFocusChangeMethod(name, desc);
+                }
+                MethodVisitor collectMethodNode = new CollectMethodNode(className, access, name, desc, signature, exceptions);
+                if(this.version <= Opcodes.V1_6) {
+                    return new JSRAdapter(api, collectMethodNode, access, name, desc, signature, exceptions);
+                }
+                return collectMethodNode;
             }
         }
-
-        @Override
-        public void visitEnd() {
-            super.visitEnd();
-            // collect Activity#onWindowFocusChange
-        }
-
     }
 
     private class CollectMethodNode extends MethodNode {
         private String className;
-        //构造方法
         private boolean isConstructor;
 
 
         CollectMethodNode(String className, int access, String name, String desc,
                           String signature, String[] exceptions) {
-            super(Opcodes.ASM5, access, name, desc, signature, exceptions);
+            super(AgpCompat.getAsmApi(), access, name, desc, signature, exceptions);
             this.className = className;
         }
 
@@ -445,37 +349,34 @@ public class MethodCollector {
             super.visitEnd();
             TraceMethod traceMethod = TraceMethod.create(0, access, className, name, desc);
 
-            if ("<init>".equals(name) /*|| "<clinit>".equals(name)*/) {
+            if ("<init>".equals(name)) {
+                //构造方法
                 isConstructor = true;
             }
+
+            boolean isNeedTrace = isNeedTrace(configuration, traceMethod.className, mappingCollector);
             // filter simple methods
-            //必要插桩类中的简单方法 过滤掉
             if ((isEmptyMethod() || isGetSetMethod() || isSingleMethod())
-                    && mTraceConfig.isNeedTrace(traceMethod.className, mMappingCollector)) {
-                mIgnoreCount++;
-                mCollectedIgnoreMethodMap.put(traceMethod.getMethodName(), traceMethod);
+                    && isNeedTrace) {
+                //需要插桩，但又属于简单方法，放入collectedIgnoreMethodMap
+                ignoreCount.incrementAndGet();
+                collectedIgnoreMethodMap.put(traceMethod.getMethodName(), traceMethod);
                 return;
             }
 
-            if (mTraceConfig.isNeedTrace(traceMethod.className, mMappingCollector) && !mCollectedMethodMap.containsKey(traceMethod.getMethodName())) {
-                //方法id自增
-                traceMethod.id = mMethodId.incrementAndGet();
-                mCollectedMethodMap.put(traceMethod.getMethodName(), traceMethod);
-                mIncrementCount++;
-            } else if (!mTraceConfig.isNeedTrace(traceMethod.className, mMappingCollector)
-                    && !mCollectedBlackMethodMap.containsKey(traceMethod.className)) {
-                //白名单类 不需要插桩(防止递归)
-                mIgnoreCount++;
-                mCollectedBlackMethodMap.put(traceMethod.getMethodName(), traceMethod);
+            if (isNeedTrace && !collectedMethodMap.containsKey(traceMethod.getMethodName())) {
+                traceMethod.id = methodId.incrementAndGet();
+                collectedMethodMap.put(traceMethod.getMethodName(), traceMethod);
+                incrementCount.incrementAndGet();
+            } else if (!isNeedTrace && !collectedIgnoreMethodMap.containsKey(traceMethod.className)) {
+                ignoreCount.incrementAndGet();
+                collectedIgnoreMethodMap.put(traceMethod.getMethodName(), traceMethod);
             }
 
         }
 
+        //简单的get set方法
         private boolean isGetSetMethod() {
-            // complex method
-//            if (!isConstructor && instructions.size() > 20) {
-//                return false;
-//            }
             int ignoreCount = 0;
             ListIterator<AbstractInsnNode> iterator = instructions.iterator();
             while (iterator.hasNext()) {
@@ -504,7 +405,6 @@ public class MethodCollector {
                     if (isConstructor && opcode == Opcodes.INVOKESPECIAL) {
                         ignoreCount++;
                         if (ignoreCount > 1) {
-//                            Log.e(TAG, "[ignore] classname %s, name %s", className, name);
                             return false;
                         }
                         continue;
@@ -515,6 +415,7 @@ public class MethodCollector {
             return true;
         }
 
+        //没有嵌套调用的方法
         private boolean isSingleMethod() {
             ListIterator<AbstractInsnNode> iterator = instructions.iterator();
             while (iterator.hasNext()) {
@@ -529,7 +430,7 @@ public class MethodCollector {
             return true;
         }
 
-
+        //是否是空方法，所有指令为空
         private boolean isEmptyMethod() {
             ListIterator<AbstractInsnNode> iterator = instructions.iterator();
             while (iterator.hasNext()) {
@@ -544,6 +445,62 @@ public class MethodCollector {
             return true;
         }
 
+    }
+
+    public static boolean isWindowFocusChangeMethod(String name, String desc) {
+        return null != name && null != desc && name.equals(TraceBuildConstants.MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD) && desc.equals(TraceBuildConstants.MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD_ARGS);
+    }
+
+    public static boolean isNeedTrace(Configuration configuration, String clsName, MappingCollector mappingCollector) {
+        boolean isNeed = true;
+        if (configuration.blockSet.contains(clsName)) {
+            //在白名单中，不需要插桩
+            isNeed = false;
+        } else {
+            if (null != mappingCollector) {
+                clsName = mappingCollector.originalClassName(clsName, clsName);
+            }
+            clsName = clsName.replaceAll("/", ".");
+            for (String packageName : configuration.blockSet) {
+                if (clsName.startsWith(packageName.replaceAll("/", "."))) {
+                    isNeed = false;
+                    break;
+                }
+            }
+        }
+        return isNeed;
+    }
+
+
+    private void listClassFiles(ArrayList<File> classFiles, File folder) {
+        File[] files = folder.listFiles();
+        if (null == files) {
+            Log.e(TAG, "[listClassFiles] files is null! %s", folder.getAbsolutePath());
+            return;
+        }
+        for (File file : files) {
+            if (file == null) {
+                continue;
+            }
+            if (file.isDirectory()) {
+                listClassFiles(classFiles, file);
+            } else if (isNeedTraceFile(file.getName())) {
+                classFiles.add(file);
+            }
+        }
+    }
+
+    public static boolean isNeedTraceFile(String fileName) {
+        if (fileName.endsWith(".class")) {
+            for (String unTraceCls : TraceBuildConstants.UN_TRACE_CLASS) {
+                if (fileName.contains(unTraceCls)) {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+        return true;
     }
 
 }

@@ -83,10 +83,3 @@ dependencies {
     implementation project(':kotlin')
     implementation project(":camera")
 }
-
-apply plugin: 'com.earthgee.systrace'
-systrace{
-    enable = true
-    baseMethodMapFile = "${project.buildDir}/systrace_output/Debug.methodmap"
-    blackListFile = "${project.projectDir}/blacklist/blackMethodList.txt"
-}

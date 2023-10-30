@@ -20,7 +20,7 @@ import java.util.Date;
 
 /**
  * Created by zhaoruixuan1 on 2023/8/11
- * CopyRight (c) haodf.com
+ * test
  * 功能：统计当前进程一段时间内各线程cpu耗时占比
  * 系统 /proc/stat不可用 当前进程 /proc/[pid]/stat可用
  */

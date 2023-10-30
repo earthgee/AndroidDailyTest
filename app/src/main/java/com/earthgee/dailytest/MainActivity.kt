@@ -9,7 +9,7 @@ import com.julive.adapter.core.*
 
 /**
  *  Created by zhaoruixuan1 on 2023/8/9
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：主页面
  */
 class MainActivity : AppCompatActivity() {

@@ -21,11 +21,24 @@ package com.earthgee.systrace;
  */
 public class TraceBuildConstants {
 
-    public final static int MAX_SECTION_NAME_LEN = 127;
-
-    public final static String MATRIX_TRACE_METHOD_BEAT_CLASS = "com/sample/systrace/asm/TraceTag";
-    public static final String[] UN_TRACE_CLASS = {"R.class", "R$", "Manifest", "BuildConfig"};
-    public final static String DEFAULT_BLACK_TRACE =
+    public final static String MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD = "onWindowFocusChanged";
+    public final static String MATRIX_TRACE_ATTACH_BASE_CONTEXT = "attachBaseContext";
+    public final static String MATRIX_TRACE_ATTACH_BASE_CONTEXT_ARGS = "(Landroid/content/Context;)V";
+    public final static String MATRIX_TRACE_APPLICATION_ON_CREATE = "onCreate";
+    public final static String MATRIX_TRACE_APPLICATION_ON_CREATE_ARGS = "()V";
+    public final static String MATRIX_TRACE_ACTIVITY_CLASS = "android/app/Activity";
+    public final static String MATRIX_TRACE_V7_ACTIVITY_CLASS = "android/support/v7/app/AppCompatActivity";
+    public final static String MATRIX_TRACE_V4_ACTIVITY_CLASS = "android/support/v4/app/FragmentActivity";
+    public final static String MATRIX_TRACE_ANDROIDX_ACTIVITY_CLASS = "androidx/appcompat/app/AppCompatActivity";
+    public final static String MATRIX_TRACE_APPLICATION_CLASS = "android/app/Application";
+    public final static String MATRIX_TRACE_METHOD_BEAT_CLASS = "com/tencent/matrix/trace/core/AppMethodBeat";
+    public final static String MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD_ARGS = "(Z)V";
+    public static final String[] UN_TRACE_CLASS = {"R.class", "R$", "Manifest", "BuildConfig",
+            "META-INF", "module-info"};
+    public final static String DEFAULT_BLOCK_TRACE =
                     "[package]\n"
-                    + "-keepclass com/sample/systrace/asm/TraceTag\n";
+                    + "-keeppackage android/\n";
+
+    private static final int METHOD_ID_MAX = 0xFFFFF;
+    public static final int METHOD_ID_DISPATCH = METHOD_ID_MAX - 1;
 }

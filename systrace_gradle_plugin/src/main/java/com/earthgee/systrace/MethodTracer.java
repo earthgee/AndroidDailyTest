@@ -16,7 +16,12 @@
 
 package com.earthgee.systrace;
 
-import com.earthgee.systrace.item.TraceMethod;
+import com.earhtgee.systrace.compat.AgpCompat;
+import com.earhtgee.systrace.item.TraceMethod;
+import com.earhtgee.systrace.javautil.FileUtil;
+import com.earhtgee.systrace.javautil.Log;
+import com.earhtgee.systrace.javautil.Util;
+import com.earhtgee.systrace.retrace.MappingCollector;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -24,18 +29,27 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.AdviceAdapter;
+import org.objectweb.asm.util.CheckClassAdapter;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
@@ -50,43 +64,78 @@ public class MethodTracer {
 
     private static final String TAG = "Matrix.MethodTracer";
     private static AtomicInteger traceMethodCount = new AtomicInteger();
-    private final TraceBuildConfig mTraceConfig;
-    //key 方法名
-    //插桩方法表
-    private final HashMap<String, TraceMethod> mCollectedMethodMap;
-    //asm遍历到的继承关系 key 类 value 父类
-    private final HashMap<String, String> mCollectedClassExtendMap;
+    private final Configuration configuration;
+    private final ConcurrentHashMap<String, TraceMethod> collectedMethodMap;
+    private final ConcurrentHashMap<String, String> collectedClassExtendMap;
+    private final ExecutorService executor;
+    private MappingCollector mappingCollector;
 
-    MethodTracer(TraceBuildConfig config, HashMap<String, TraceMethod> collectedMap, HashMap<String, String> collectedClassExtendMap) {
-        this.mTraceConfig = config;
-        this.mCollectedClassExtendMap = collectedClassExtendMap;
-        this.mCollectedMethodMap = collectedMap;
+    private volatile boolean traceError = false;
+
+    public MethodTracer(ExecutorService executor, MappingCollector mappingCollector, Configuration config, ConcurrentHashMap<String, TraceMethod> collectedMap, ConcurrentHashMap<String, String> collectedClassExtendMap) {
+        this.configuration = config;
+        this.mappingCollector = mappingCollector;
+        this.executor = executor;
+        this.collectedClassExtendMap = collectedClassExtendMap;
+        this.collectedMethodMap = collectedMap;
     }
 
-
-    public void trace(Map<File, File> srcFolderList, Map<File, File> dependencyJarList) {
-        traceMethodFromSrc(srcFolderList);
-        traceMethodFromJar(dependencyJarList);
+    /**
+     *
+     * @param srcFolderList 目录映射表
+     * @param dependencyJarList jar映射表
+     * @param classLoader TraceClassLoader
+     * @param ignoreCheckClass 默认为true
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    public void trace(Map<File, File> srcFolderList, Map<File, File> dependencyJarList, ClassLoader classLoader, boolean ignoreCheckClass) throws ExecutionException, InterruptedException {
+        List<Future> futures = new LinkedList<>();
+        traceMethodFromSrc(srcFolderList, futures, classLoader, ignoreCheckClass);
+        traceMethodFromJar(dependencyJarList, futures, classLoader, ignoreCheckClass);
+        for (Future future : futures) {
+            future.get();
+        }
+        if (traceError) {
+            throw new IllegalArgumentException("something wrong with trace, see detail log before");
+        }
+        futures.clear();
     }
 
-    private void traceMethodFromSrc(Map<File, File> srcMap) {
+    private void traceMethodFromSrc(Map<File, File> srcMap, List<Future> futures, final ClassLoader classLoader, final boolean skipCheckClass) {
         if (null != srcMap) {
             for (Map.Entry<File, File> entry : srcMap.entrySet()) {
-                innerTraceMethodFromSrc(entry.getKey(), entry.getValue());
+                futures.add(executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        innerTraceMethodFromSrc(entry.getKey(), entry.getValue(), classLoader, skipCheckClass);
+                    }
+                }));
             }
         }
     }
 
-    private void traceMethodFromJar(Map<File, File> dependencyMap) {
+    private void traceMethodFromJar(Map<File, File> dependencyMap, List<Future> futures, final ClassLoader classLoader, final boolean skipCheckClass) {
         if (null != dependencyMap) {
             for (Map.Entry<File, File> entry : dependencyMap.entrySet()) {
-                innerTraceMethodFromJar(entry.getKey(), entry.getValue());
+                futures.add(executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        innerTraceMethodFromJar(entry.getKey(), entry.getValue(), classLoader, skipCheckClass);
+                    }
+                }));
             }
         }
     }
 
-    private void innerTraceMethodFromSrc(File input, File output) {
-
+    /**
+     * 目录处理
+     * @param input
+     * @param output
+     * @param classLoader
+     * @param ignoreCheckClass
+     */
+    private void innerTraceMethodFromSrc(File input, File output, ClassLoader classLoader, boolean ignoreCheckClass) {
         ArrayList<File> classFileList = new ArrayList<>();
         if (input.isDirectory()) {
             listClassFiles(classFileList, input);
@@ -94,37 +143,71 @@ public class MethodTracer {
             classFileList.add(input);
         }
 
+
         for (File classFile : classFileList) {
             InputStream is = null;
             FileOutputStream os = null;
             try {
                 final String changedFileInputFullPath = classFile.getAbsolutePath();
                 final File changedFileOutput = new File(changedFileInputFullPath.replace(input.getAbsolutePath(), output.getAbsolutePath()));
+
+                if (changedFileOutput.getCanonicalPath().equals(classFile.getCanonicalPath())) {
+                    //输入输出一样时报错
+                    throw new RuntimeException("Input file(" + classFile.getCanonicalPath() + ") should not be same with output!");
+                }
+
                 if (!changedFileOutput.exists()) {
                     changedFileOutput.getParentFile().mkdirs();
                 }
                 changedFileOutput.createNewFile();
 
-                if (mTraceConfig.isNeedTraceClass(classFile.getName())) {
-                    is = new FileInputStream(classFile);
-                    ClassReader classReader = new ClassReader(is);
-                    ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-                    ClassVisitor classVisitor = new TraceClassAdapter(Opcodes.ASM5, classWriter);
-                    classReader.accept(classVisitor, ClassReader.EXPAND_FRAMES);
-                    is.close();
+                if (MethodCollector.isNeedTraceFile(classFile.getName())) {
+                    try {
+                        is = new FileInputStream(classFile);
+                        ClassReader classReader = new ClassReader(is);
+                        ClassWriter classWriter = new TraceClassWriter(ClassWriter.COMPUTE_FRAMES, classLoader);
+                        ClassVisitor classVisitor = new TraceClassAdapter(AgpCompat.getAsmApi(), classWriter);
+                        classReader.accept(classVisitor, ClassReader.EXPAND_FRAMES);
+                        is.close();
 
-                    if (output.isDirectory()) {
-                        os = new FileOutputStream(changedFileOutput);
-                    } else {
-                        os = new FileOutputStream(output);
+                        byte[] data = classWriter.toByteArray();
+
+                        if (!ignoreCheckClass) {
+                            try {
+                                ClassReader cr = new ClassReader(data);
+                                ClassWriter cw = new ClassWriter(0);
+                                ClassVisitor check = new CheckClassAdapter(cw);
+                                cr.accept(check, ClassReader.EXPAND_FRAMES);
+                            } catch (Throwable e) {
+                                System.err.println("trace output ERROR : " + e.getMessage() + ", " + classFile);
+                                traceError = true;
+                            }
+                        }
+
+                        if (output.isDirectory()) {
+                            os = new FileOutputStream(changedFileOutput);
+                        } else {
+                            os = new FileOutputStream(output);
+                        }
+                        os.write(data);
+                        os.close();
+                    } catch (IndexOutOfBoundsException exception) {
+                        Log.e(TAG, "inject src error classFile:%s e:%s", input.getAbsolutePath(),
+                                classFile.getAbsolutePath(), exception.getMessage());
+                        FileUtil.copyFileUsingStream(classFile, changedFileOutput);
                     }
-                    os.write(classWriter.toByteArray());
-                    os.close();
                 } else {
-                    Util.copyFileUsingStream(classFile, changedFileOutput);
+                    FileUtil.copyFileUsingStream(classFile, changedFileOutput);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                Log.e(TAG, "[innerTraceMethodFromSrc] input path:%s error classFile:%s input e:%s", input.getAbsolutePath(),
+                        classFile.getAbsolutePath(), e.getMessage());
+                try {
+                    Files.copy(input.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
             } finally {
                 try {
                     is.close();
@@ -136,7 +219,7 @@ public class MethodTracer {
         }
     }
 
-    private void innerTraceMethodFromJar(File input, File output) {
+    private void innerTraceMethodFromJar(File input, File output, final ClassLoader classLoader, boolean skipCheckClass) {
         ZipOutputStream zipOutputStream = null;
         ZipFile zipFile = null;
         try {
@@ -146,24 +229,56 @@ public class MethodTracer {
             while (enumeration.hasMoreElements()) {
                 ZipEntry zipEntry = enumeration.nextElement();
                 String zipEntryName = zipEntry.getName();
-                if (mTraceConfig.isNeedTraceClass(zipEntryName)) {
+
+                if (Util.preventZipSlip(output, zipEntryName)) {
+                    Log.e(TAG, "Unzip entry %s failed!", zipEntryName);
+                    continue;
+                }
+
+                if (MethodCollector.isNeedTraceFile(zipEntryName)) {
                     InputStream inputStream = zipFile.getInputStream(zipEntry);
                     ClassReader classReader = new ClassReader(inputStream);
-                    ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-                    ClassVisitor classVisitor = new TraceClassAdapter(Opcodes.ASM5, classWriter);
+                    ClassWriter classWriter = new TraceClassWriter(ClassWriter.COMPUTE_FRAMES, classLoader);
+                    ClassVisitor classVisitor = new TraceClassAdapter(AgpCompat.getAsmApi(), classWriter);
                     classReader.accept(classVisitor, ClassReader.EXPAND_FRAMES);
                     byte[] data = classWriter.toByteArray();
+//
+                    if (!skipCheckClass) {
+                        try {
+                            ClassReader r = new ClassReader(data);
+                            ClassWriter w = new ClassWriter(0);
+                            ClassVisitor v = new CheckClassAdapter(w);
+                            r.accept(v, ClassReader.EXPAND_FRAMES);
+                        } catch (Throwable e) {
+                            System.err.println("trace jar output ERROR: " + e.getMessage() + ", " + zipEntryName);
+//                        e.printStackTrace();
+                            traceError = true;
+                        }
+                    }
+
                     InputStream byteArrayInputStream = new ByteArrayInputStream(data);
                     ZipEntry newZipEntry = new ZipEntry(zipEntryName);
-                    Util.addZipEntry(zipOutputStream, newZipEntry, byteArrayInputStream);
+                    FileUtil.addZipEntry(zipOutputStream, newZipEntry, byteArrayInputStream);
                 } else {
                     InputStream inputStream = zipFile.getInputStream(zipEntry);
                     ZipEntry newZipEntry = new ZipEntry(zipEntryName);
-                    Util.addZipEntry(zipOutputStream, newZipEntry, inputStream);
+                    FileUtil.addZipEntry(zipOutputStream, newZipEntry, inputStream);
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "[traceMethodFromJar] err! %s", output.getAbsolutePath());
+            Log.e(TAG, "[innerTraceMethodFromJar] input:%s output:%s e:%s", input, output, e.getMessage());
+            if (e instanceof ZipException) {
+                e.printStackTrace();
+            }
+            try {
+                if (input.length() > 0) {
+                    Files.copy(input.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } else {
+                    Log.e(TAG, "[innerTraceMethodFromJar] input:%s is empty", input);
+                }
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
         } finally {
             try {
                 if (zipOutputStream != null) {
@@ -201,12 +316,17 @@ public class MethodTracer {
         }
     }
 
-    //方法前后插桩
     private class TraceClassAdapter extends ClassVisitor {
-
+        //当前类名
         private String className;
+        //父类名
+        private String superName;
         private boolean isABSClass = false;
-        private boolean isMethodBeatClass = false;
+        private boolean hasWindowFocusMethod = false;
+        //是否是Activity及其子类
+        private boolean isActivityOrSubClass;
+        private boolean isNeedTrace;
+        private int version;
 
         TraceClassAdapter(int i, ClassVisitor classVisitor) {
             super(i, classVisitor);
@@ -215,30 +335,42 @@ public class MethodTracer {
         @Override
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
             super.visit(version, access, name, signature, superName, interfaces);
+            this.version = version;
             this.className = name;
+            this.superName = superName;
+            this.isActivityOrSubClass = isActivityOrSubClass(className, collectedClassExtendMap);
+            this.isNeedTrace = MethodCollector.isNeedTrace(configuration, className, mappingCollector);
             if ((access & Opcodes.ACC_ABSTRACT) > 0 || (access & Opcodes.ACC_INTERFACE) > 0) {
                 this.isABSClass = true;
-            }
-            if (mTraceConfig.isMethodBeatClass(className, mCollectedClassExtendMap)) {
-                isMethodBeatClass = true;
             }
         }
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc,
                                          String signature, String[] exceptions) {
+            if (!hasWindowFocusMethod) {
+                hasWindowFocusMethod = MethodCollector.isWindowFocusChangeMethod(name, desc);
+            }
             if (isABSClass) {
                 return super.visitMethod(access, name, desc, signature, exceptions);
             } else {
                 MethodVisitor methodVisitor = cv.visitMethod(access, name, desc, signature, exceptions);
-                return new TraceMethodAdapter(api, methodVisitor, access, name, desc, this.className,
-                        isMethodBeatClass);
+                MethodVisitor resultMethodVisitor = new TraceMethodAdapter(api, methodVisitor, access, name, desc, this.className,
+                        hasWindowFocusMethod, isActivityOrSubClass, isNeedTrace);
+                if(this.version <= Opcodes.V1_6) {
+                    return new JSRAdapter(api, resultMethodVisitor, access, name, desc, signature, exceptions);
+                }
+                return resultMethodVisitor;
             }
         }
 
 
         @Override
         public void visitEnd() {
+            //当前Activity没有加入focus方法，字节码插入
+            if (!hasWindowFocusMethod && isActivityOrSubClass && isNeedTrace) {
+                insertWindowFocusChangeMethod(cv, className, superName);
+            }
             super.visitEnd();
         }
     }
@@ -248,60 +380,111 @@ public class MethodTracer {
         private final String methodName;
         private final String name;
         private final String className;
-        private final boolean isMethodBeatClass;
+        private final boolean hasWindowFocusMethod;
+        private final boolean isNeedTrace;
+        private final boolean isActivityOrSubClass;
 
+        /**
+         *
+         * @param api
+         * @param mv
+         * @param access 访问权限
+         * @param name 方法名
+         * @param desc 方法描述
+         * @param className 类名
+         * @param hasWindowFocusMethod
+         * @param isActivityOrSubClass
+         * @param isNeedTrace
+         */
         protected TraceMethodAdapter(int api, MethodVisitor mv, int access, String name, String desc, String className,
-                                     boolean isMethodBeatClass) {
+                                     boolean hasWindowFocusMethod, boolean isActivityOrSubClass, boolean isNeedTrace) {
             super(api, mv, access, name, desc);
             TraceMethod traceMethod = TraceMethod.create(0, access, className, name, desc);
             this.methodName = traceMethod.getMethodName();
-            this.isMethodBeatClass = isMethodBeatClass;
+            this.hasWindowFocusMethod = hasWindowFocusMethod;
             this.className = className;
             this.name = name;
+            this.isActivityOrSubClass = isActivityOrSubClass;
+            this.isNeedTrace = isNeedTrace;
+
         }
 
+        //进入方法体调用
         @Override
         protected void onMethodEnter() {
-            TraceMethod traceMethod = mCollectedMethodMap.get(methodName);
+            TraceMethod traceMethod = collectedMethodMap.get(methodName);
             if (traceMethod != null) {
                 traceMethodCount.incrementAndGet();
-                String sectionName = methodName;
-                int length = sectionName.length();
-                if (length > TraceBuildConstants.MAX_SECTION_NAME_LEN) {
-                    // 先去掉参数
-                    int parmIndex = sectionName.indexOf('(');
-                    sectionName = sectionName.substring(0, parmIndex);
-                    // 如果依然更大，直接裁剪
-                    length = sectionName.length();
-                    if (length > TraceBuildConstants.MAX_SECTION_NAME_LEN) {
-                        sectionName = sectionName.substring(length - TraceBuildConstants.MAX_SECTION_NAME_LEN);
-                    }
+                //插入字节码
+                mv.visitLdcInsn(traceMethod.id);
+                mv.visitMethodInsn(INVOKESTATIC, TraceBuildConstants.MATRIX_TRACE_CLASS, "i", "(I)V", false);
+
+                if (checkNeedTraceWindowFocusChangeMethod(traceMethod)) {
+                    traceWindowFocusChangeMethod(mv, className);
                 }
-                mv.visitLdcInsn(sectionName);
-                mv.visitMethodInsn(INVOKESTATIC, TraceBuildConstants.MATRIX_TRACE_METHOD_BEAT_CLASS, "i", "(Ljava/lang/String;)V", false);
             }
         }
 
+        //离开方法体调用
         @Override
         protected void onMethodExit(int opcode) {
-            //if (isMethodBeatClass && ("<clinit>").equals(name)) {
-            //    StringBuffer stringBuffer = new StringBuffer();
-            //
-            //    stringBuffer.deleteCharAt(stringBuffer.length() - 1);
-            //    mv.visitLdcInsn(stringBuffer.toString());
-            //    mv.visitFieldInsn(Opcodes.PUTSTATIC, className, TraceBuildConstants.MATRIX_TRACE_APPLICATION_CREATE_FILED, "Ljava/lang/String;");
-            //}
-            TraceMethod traceMethod = mCollectedMethodMap.get(methodName);
+            TraceMethod traceMethod = collectedMethodMap.get(methodName);
             if (traceMethod != null) {
-
                 traceMethodCount.incrementAndGet();
-                //mv.visitLdcInsn(traceMethod.id);
-                mv.visitMethodInsn(INVOKESTATIC, TraceBuildConstants.MATRIX_TRACE_METHOD_BEAT_CLASS, "o", "()V", false);
+                mv.visitLdcInsn(traceMethod.id);
+                mv.visitMethodInsn(INVOKESTATIC, TraceBuildConstants.MATRIX_TRACE_CLASS, "o", "(I)V", false);
+            }
+        }
+
+        private boolean checkNeedTraceWindowFocusChangeMethod(TraceMethod traceMethod) {
+            if (hasWindowFocusMethod && isActivityOrSubClass && isNeedTrace) {
+                TraceMethod windowFocusChangeMethod = TraceMethod.create(-1, Opcodes.ACC_PUBLIC, className,
+                        TraceBuildConstants.MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD, TraceBuildConstants.MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD_ARGS);
+                if (windowFocusChangeMethod.equals(traceMethod)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+    }
+
+    private boolean isActivityOrSubClass(String className, ConcurrentHashMap<String, String> mCollectedClassExtendMap) {
+        className = className.replace(".", "/");
+        boolean isActivity = className.equals(TraceBuildConstants.MATRIX_TRACE_ACTIVITY_CLASS)
+                || className.equals(TraceBuildConstants.MATRIX_TRACE_V4_ACTIVITY_CLASS)
+                || className.equals(TraceBuildConstants.MATRIX_TRACE_V7_ACTIVITY_CLASS)
+                || className.equals(TraceBuildConstants.MATRIX_TRACE_ANDROIDX_ACTIVITY_CLASS);
+        if (isActivity) {
+            return true;
+        } else {
+            if (!mCollectedClassExtendMap.containsKey(className)) {
+                return false;
+            } else {
+                return isActivityOrSubClass(mCollectedClassExtendMap.get(className), mCollectedClassExtendMap);
             }
         }
     }
 
+    private void traceWindowFocusChangeMethod(MethodVisitor mv, String classname) {
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitVarInsn(Opcodes.ILOAD, 1);
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, TraceBuildConstants.MATRIX_TRACE_CLASS, "at", "(Landroid/app/Activity;Z)V", false);
+    }
 
-
+    //插入onWindowFocusChanged方法
+    private void insertWindowFocusChangeMethod(ClassVisitor cv, String classname, String superClassName) {
+        MethodVisitor methodVisitor = cv.visitMethod(Opcodes.ACC_PUBLIC, TraceBuildConstants.MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD,
+                TraceBuildConstants.MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD_ARGS, null, null);
+        methodVisitor.visitCode();
+        methodVisitor.visitVarInsn(Opcodes.ALOAD, 0);
+        methodVisitor.visitVarInsn(Opcodes.ILOAD, 1);
+        methodVisitor.visitMethodInsn(Opcodes.INVOKESPECIAL, superClassName, TraceBuildConstants.MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD,
+                TraceBuildConstants.MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD_ARGS, false);
+        traceWindowFocusChangeMethod(methodVisitor, classname);
+        methodVisitor.visitInsn(Opcodes.RETURN);
+        methodVisitor.visitMaxs(2, 2);
+        methodVisitor.visitEnd();
+    }
 
 }

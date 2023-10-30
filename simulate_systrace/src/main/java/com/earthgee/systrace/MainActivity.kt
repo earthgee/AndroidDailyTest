@@ -9,7 +9,7 @@ import com.earthgee.simulate_systrace.R
 
 /**
  *  Created by zhaoruixuan1 on 2023/8/11
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：模拟systrace
  */
 @Route(path = "/atrace/main")

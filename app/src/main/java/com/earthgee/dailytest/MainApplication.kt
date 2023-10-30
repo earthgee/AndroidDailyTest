@@ -9,7 +9,7 @@ import com.earthgee.dailytest.sharedpreferenceimpl.SharedPreferencesImpl
 
 /**
  *  Created by zhaoruixuan1 on 2023/8/9
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：
  */
 class MainApplication : Application(){

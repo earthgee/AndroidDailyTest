@@ -12,7 +12,7 @@ import com.earthgee.simulate_systrace.R;
 
 /**
  * Created by zhaoruixuan1 on 2023/8/21
- * CopyRight (c) haodf.com
+ * test
  * 功能：测试asm编译插桩，方法前后调用（卡顿监控准备）
  */
 @Route(path = "/atrace/asmtest")

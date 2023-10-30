@@ -21,16 +21,11 @@ package com.earthgee.systrace.retrace;
  */
 public class MethodInfo {
 
-    //方法所属类名
     private final String originalClassName;
 
-    //原始方法返回类型
     public String originalType;
-    //原始方法参数
     public String originalArguments;
-    //原始方法名称
     public String originalName;
-    //方法签名
     public String desc;
 
     public MethodInfo(String originalClassName,

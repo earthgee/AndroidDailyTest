@@ -16,7 +16,7 @@
 
 package com.earthgee.systrace.retrace;
 
-import com.earthgee.systrace.Log;
+import com.earhtgee.systrace.javautil.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,7 +26,6 @@ import java.io.LineNumberReader;
 
 /**
  * Created by caichongyang on 2017/6/3.
- * 解析编译混淆文件
  */
 public class MappingReader {
     private final static String TAG = "MappingReader";
@@ -38,6 +37,7 @@ public class MappingReader {
     private final static String DOT = ".";
     private final File proguardMappingFile;
 
+    //混淆映射文件
     public MappingReader(File proguardMappingFile) {
         this.proguardMappingFile = proguardMappingFile;
     }
@@ -79,8 +79,7 @@ public class MappingReader {
     }
 
     /**
-     * 类映射解析
-     * @param line read content
+     * @param line read content 读取类映射
      * @param mappingProcessor
      * @return
      */
@@ -97,9 +96,9 @@ public class MappingReader {
         }
 
         // trim the elements.
-        // 原始类名
+        //原始类名
         String className = line.substring(0, leftIndex).trim();
-        // 映射后类名
+        //映射类名
         String newClassName = line.substring(leftIndex + offset, rightIndex).trim();
 
         // Process this class name mapping.
@@ -109,14 +108,13 @@ public class MappingReader {
     }
 
     /**
-     * 类成员解析
-     * Parses the a class member mapping
+     * Parses the a class member mapping 读取类成员映射（字段和方法）
      *
-     * @param className 原始类名
-     * @param line 解析数据
+     * @param className
+     * @param line
      * @param mappingProcessor parse line such as
-     *                         ___ ___ -> ___
-     *                         ___:___:___ ___(___) -> ___
+     *                         ___ ___ -> ___ 字段映射
+     *                         ___:___:___ ___(___) -> ___ 方法映射
      *                         ___:___:___ ___(___):___ -> ___
      *                         ___:___:___ ___(___):___:___ -> ___
      */
@@ -135,19 +133,17 @@ public class MappingReader {
         }
 
         // trim the elements.
-        //类型
         String type = line.substring(leftIndex2 + 1, spaceIndex).trim();
-        //名字
         String name = line.substring(spaceIndex + 1, argIndex1 >= 0 ? argIndex1 : rightIndex).trim();
-        //映射后名字
         String newName = line.substring(rightIndex + 2).trim();
-
 
         String newClassName = className;
         int dotIndex = name.lastIndexOf(DOT);
         if (dotIndex >= 0) {
             className = name.substring(0, dotIndex);
             name = name.substring(dotIndex + 1);
+            //重点观察？？？
+            Log.i(TAG, "parseClassMemberMapping,className=%s,name=%s", className, name);
         }
 
         // parse class member mapping.

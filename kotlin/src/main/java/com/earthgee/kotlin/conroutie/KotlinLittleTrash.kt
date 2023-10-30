@@ -4,7 +4,6 @@ import kotlinx.coroutines.*
 
 /**
  *  Created by zhaoruixuan1 on 2023/9/25
- *  CopyRight (c) haodf.com
  *  功能：
  */
 class KotlinLittleTrash {

@@ -12,7 +12,7 @@ import com.julive.adapter.core.*
 
 /**
  *  Created by zhaoruixuan1 on 2023/9/26
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：
  */
 @Route(path = "/kotlin/main")

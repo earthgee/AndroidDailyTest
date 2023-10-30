@@ -4,7 +4,7 @@ import android.util.Log
 
 /**
  *  Created by zhaoruixuan1 on 2023/9/22
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：
  */
 class SpyingSequence<T>(private val underlyingSequence: Sequence<T>) : Sequence<T>{

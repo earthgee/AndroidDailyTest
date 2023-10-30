@@ -34,12 +34,12 @@ public interface MappingProcessor {
     /**
      * mapping the method name.
      *
-     * @param className          the original class name. 原始类名
-     * @param methodReturnType   the original external method return type.  原始方法返回类型
-     * @param methodName         the original external method name. 原始方法名称
-     * @param methodArguments    the original external method arguments. 原始方法参数
-     * @param newClassName       the new class name. 新类名（？？？实际使用的还是原始类名）
-     * @param newMethodName      the new method name. 映射后方法名
+     * @param className          the original class name.
+     * @param methodReturnType   the original external method return type.
+     * @param methodName         the original external method name.
+     * @param methodArguments    the original external method arguments.
+     * @param newClassName       the new class name.
+     * @param newMethodName      the new method name.
      */
     void processMethodMapping(String className,
                                      String methodReturnType,

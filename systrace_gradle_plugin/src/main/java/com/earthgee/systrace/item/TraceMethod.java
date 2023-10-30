@@ -17,28 +17,27 @@
 package com.earthgee.systrace.item;
 
 
-
-import com.earthgee.systrace.retrace.MappingCollector;
-import com.earthgee.systrace.retrace.MethodInfo;
+import com.earhtgee.systrace.retrace.MappingCollector;
+import com.earhtgee.systrace.retrace.MethodInfo;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import com.earthgee.systrace.Util;
 
 /**
  * Created by caichongyang on 2017/6/3.
+ * 插桩方法信息
  */
 public class TraceMethod {
     private static final String TAG = "Matrix.TraceMethod";
-    //[0]
+    //method id
     public int id;
-    //[1]
+    //访问标识
     public int accessFlag;
-    //[3]
+    //方法所属类
     public String className;
-    //[4]
+    //方法名
     public String methodName;
-    //[5]
+    //方法描述
     public String desc;
 
     public static TraceMethod create(int id, int accessFlag, String className, String methodName, String desc) {
@@ -90,9 +89,9 @@ public class TraceMethod {
     }
 
     public String getReturn() {
-        if (Util.isNullOrNil(desc)) {
-            return null;
-        }
+//        if (Util.isNullOrNil(desc)) {
+//            return null;
+//        }
         return Type.getReturnType(desc).toString();
     }
 

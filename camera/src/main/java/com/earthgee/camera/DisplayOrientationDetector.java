@@ -8,7 +8,6 @@ import android.view.Surface;
 
 /**
  * Created by zhaoruixuan1 on 2023/10/9
- * CopyRight (c) haodf.com
  * 功能：
  */
 abstract class DisplayOrientationDetector {

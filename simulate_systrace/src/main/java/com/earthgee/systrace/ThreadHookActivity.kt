@@ -10,7 +10,7 @@ import com.earthgee.simulate_systrace.R
 
 /**
  *  Created by zhaoruixuan1 on 2023/8/18
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：
  */
 @Route(path = "/atrace/threadhook")

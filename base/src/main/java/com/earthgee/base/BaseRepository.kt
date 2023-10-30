@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 
 /**
  *  Created by zhaoruixuan1 on 2023/10/30
- *  CopyRight (c) haodf.com
+ *  test
  *  功能：
  */
 open class BaseRepository
