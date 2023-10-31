@@ -18,7 +18,8 @@ class MainActivity : AppCompatActivity() {
         ItemModule("Android Base", "/base/aidl"),
         ItemModule("Performance", "/performance/main"),
         ItemModule("Kotlin", "/kotlin/main"),
-        ItemModule("Camera", "/camera/main")
+        ItemModule("Camera", "/camera/main"),
+        ItemModule("Hotfix", "/hotfix/main")
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

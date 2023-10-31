@@ -176,25 +176,38 @@ class MatrixTrace(
         /**
          * step 2
          */
-        start = System.currentTimeMillis()
-        val methodCollector = MethodCollector(executor, mappingCollector, methodId, config, collectedMethodMap)
-
-        methodCollector.collect(dirInputOutMap.keys, jarInputOutMap.keys)
-        Log.i(TAG, "[doTransform] Step(2)[Collection]... cost:%sms", System.currentTimeMillis() - start)
+//        start = System.currentTimeMillis()
+//        val methodCollector = MethodCollector(executor, mappingCollector, methodId, config, collectedMethodMap)
+//
+//        methodCollector.collect(dirInputOutMap.keys, jarInputOutMap.keys)
+//        Log.i(TAG, "[doTransform] Step(2)[Collection]... cost:%sms", System.currentTimeMillis() - start)
 
         /**
          * step 3
          */
+//        start = System.currentTimeMillis()
+//        val methodTracer = MethodTracer(executor, mappingCollector, config, methodCollector.collectedMethodMap, methodCollector.collectedClassExtendMap)
+//        val allInputs = ArrayList<File>().also {
+//            it.addAll(dirInputOutMap.keys)
+//            it.addAll(jarInputOutMap.keys)
+//        }
+//        val traceClassLoader = TraceClassLoader.getClassLoader(compileSdkVersion, sdkDirectory, allInputs)
+//        methodTracer.trace(dirInputOutMap, jarInputOutMap, traceClassLoader, skipCheckClass)
+//        traceClassLoader.close()
+//        Log.i(TAG, "[doTransform] Step(3)[Trace]... cost:%sms", System.currentTimeMillis() - start)
+
+        //hotfix v1
         start = System.currentTimeMillis()
-        val methodTracer = MethodTracer(executor, mappingCollector, config, methodCollector.collectedMethodMap, methodCollector.collectedClassExtendMap)
+        val hotfixDirector = HotfixDirector(executor, mappingCollector)
         val allInputs = ArrayList<File>().also {
             it.addAll(dirInputOutMap.keys)
             it.addAll(jarInputOutMap.keys)
         }
         val traceClassLoader = TraceClassLoader.getClassLoader(compileSdkVersion, sdkDirectory, allInputs)
-        methodTracer.trace(dirInputOutMap, jarInputOutMap, traceClassLoader, skipCheckClass)
+        hotfixDirector.director(dirInputOutMap, jarInputOutMap, traceClassLoader)
         traceClassLoader.close()
-        Log.i(TAG, "[doTransform] Step(3)[Trace]... cost:%sms", System.currentTimeMillis() - start)
+        Log.i(TAG, "[Hotfix] ... cost:%sms", System.currentTimeMillis() - start)
+
     }
 
     //解析映射任务

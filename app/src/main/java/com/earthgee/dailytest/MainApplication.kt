@@ -4,8 +4,11 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import com.alibaba.android.arouter.launcher.ARouter
+import com.earthgee.dailytest.hotfix.Hotfix
+import com.earthgee.dailytest.hotfix.Utils
 import com.earthgee.dailytest.sharedpreferenceimpl.SharedPreferencesHelper
 import com.earthgee.dailytest.sharedpreferenceimpl.SharedPreferencesImpl
+import java.io.File
 
 /**
  *  Created by zhaoruixuan1 on 2023/8/9
@@ -18,7 +21,21 @@ class MainApplication : Application(){
 
     override fun onCreate() {
         super.onCreate()
+
+        initNuwaHotfix()
+
         initArouter()
+    }
+
+    private fun initNuwaHotfix() {
+        val dexPath = File(getDir("dex", Context.MODE_PRIVATE), "hooked_dex.jar")
+        Utils.prepareDex(applicationContext, dexPath, "hooked_dex.jar")
+        Hotfix.patch(this, dexPath.absolutePath, "com.earthgee.nuwaref.AntilazyLoad")
+        try {
+            classLoader.loadClass("com.earthgee.nuwaref.AntilazyLoad")
+        } catch (exception: Exception) {
+            //none
+        }
     }
 
     private fun initArouter() {

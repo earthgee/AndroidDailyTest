@@ -36,6 +36,8 @@
         <activity android:name=".androidbase.AndroidBaseMainActivity" />
         <activity android:name=".androidbase.AidlClientActivity" />
         <activity android:name=".sharedpreferenceimpl.TestSharedPreferencesActivity" />
+        <activity android:name=".hotfix.HotfixMainActivity" />
+        <activity android:name=".hotfix.HotfixNuwaActivity" />
     </application>
 
 </manifest>

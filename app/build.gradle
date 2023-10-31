@@ -82,6 +82,7 @@ dependencies {
     implementation project(':Performance')
     implementation project(':kotlin')
     implementation project(":camera")
+
 }
 
 apply plugin: 'com.earthgee.systrace'

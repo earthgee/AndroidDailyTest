@@ -28,7 +28,7 @@ dependencies {
     implementation 'com.google.guava:guava:28.1-jre'
 }
 
-version 1.3
+version 1.4
 group "com.earthgee.systrace"
 
 apply from: rootProject.file('gradle/java-publish.gradle')
