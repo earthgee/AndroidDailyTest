@@ -17,8 +17,8 @@
 package com.earthgee.systrace.item;
 
 
-import com.earhtgee.systrace.retrace.MappingCollector;
-import com.earhtgee.systrace.retrace.MethodInfo;
+import com.earthgee.systrace.retrace.MappingCollector;
+import com.earthgee.systrace.retrace.MethodInfo;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;

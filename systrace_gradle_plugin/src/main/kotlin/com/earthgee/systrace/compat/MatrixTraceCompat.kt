@@ -1,10 +1,9 @@
-package com.earhtgee.systrace.compat
+package com.earthgee.systrace.compat
 
 import com.android.build.gradle.AppExtension
-import com.earhtgee.systrace.extension.ITraceSwitchListener
-import com.earhtgee.systrace.extension.MatrixTraceExtension
-import com.earhtgee.systrace.javautil.Log
-import com.earhtgee.systrace.trace.MatrixTraceInjection
+import com.earthgee.systrace.extension.ITraceSwitchListener
+import com.earthgee.systrace.extension.MatrixTraceExtension
+import com.earthgee.systrace.trace.MatrixTraceInjection
 import org.gradle.api.Project
 
 class MatrixTraceCompat : ITraceSwitchListener {

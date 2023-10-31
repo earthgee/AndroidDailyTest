@@ -16,7 +16,7 @@
 
 package com.earthgee.systrace.retrace;
 
-import com.earhtgee.systrace.javautil.Log;
+import com.earthgee.systrace.javautil.Log;
 
 import java.io.BufferedReader;
 import java.io.File;

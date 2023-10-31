@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.earhtgee.systrace.compat
+package com.earthgee.systrace.compat
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.builder.model.CodeShrinker

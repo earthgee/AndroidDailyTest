@@ -83,3 +83,10 @@ dependencies {
     implementation project(':kotlin')
     implementation project(":camera")
 }
+
+apply plugin: 'com.earthgee.systrace'
+performance {
+    trace {
+        enable = true
+    }
+}

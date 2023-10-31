@@ -1,4 +1,4 @@
-package com.earhtgee.systrace.extension
+package com.earthgee.systrace.extension
 
 /**
  *  Created by zhaoruixuan1 on 2023/7/11

@@ -1,4 +1,4 @@
-package com.earhtgee.systrace.compat
+package com.earthgee.systrace.compat
 
 enum class AGPVersion(
         val value: String
@@ -24,11 +24,7 @@ class VersionsCompat {
             } catch(t: Throwable) {
             }
 
-            return if (newVersion) {
-                com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
-            } else {
-                com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
-            }
+            return com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
         }
 
         val androidGradlePluginVersion: String = initCurrentAndroidGradlePluginVersion()

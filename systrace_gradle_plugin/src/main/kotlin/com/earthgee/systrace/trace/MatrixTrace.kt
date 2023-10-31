@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.earhtgee.systrace.trace
+package com.earthgee.systrace.trace
 
 import com.android.build.api.transform.Status
-import com.android.utils.FileUtils
+import com.earthgee.systrace.*
+import com.earthgee.systrace.item.TraceMethod
+import com.earthgee.systrace.javautil.FileUtil
+import com.earthgee.systrace.javautil.IOUtil
+import com.earthgee.systrace.javautil.Log
+import com.earthgee.systrace.javautil.Util
+import com.earthgee.systrace.retrace.MappingCollector
+import com.earthgee.systrace.retrace.MappingReader
 import com.google.common.hash.Hashing
-import com.earhtgee.systrace.*
-import com.earhtgee.systrace.item.TraceMethod
-import com.earhtgee.systrace.javautil.IOUtil
-import com.earhtgee.systrace.javautil.Log
-import com.earhtgee.systrace.javautil.Util
-import com.earhtgee.systrace.retrace.MappingCollector
-import com.earhtgee.systrace.retrace.MappingReader
 
 import java.io.File
 import java.util.*
@@ -325,9 +325,11 @@ class MatrixTrace(
 
             if (!dirInput.exists() && dirOutput.exists()) {
                 if (dirOutput.isDirectory) {
-                    FileUtils.deletePath(dirOutput)
+                    //FileUtils.deletePath(dirOutput)
+                    FileUtil.deleteDir(dirOutput)
                 } else {
-                    FileUtils.delete(dirOutput)
+                    //FileUtils.delete(dirOutput)
+                    FileUtil.safeDeleteFile(dirOutput)
                 }
             }
 

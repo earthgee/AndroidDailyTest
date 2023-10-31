@@ -21,6 +21,8 @@ package com.earthgee.systrace;
  */
 public class TraceBuildConstants {
 
+    //delete
+    public final static String MATRIX_TRACE_CLASS = "com/earthgee/systrace/core/AppMethodBeat";
     public final static String MATRIX_TRACE_ON_WINDOW_FOCUS_METHOD = "onWindowFocusChanged";
     public final static String MATRIX_TRACE_ATTACH_BASE_CONTEXT = "attachBaseContext";
     public final static String MATRIX_TRACE_ATTACH_BASE_CONTEXT_ARGS = "(Landroid/content/Context;)V";

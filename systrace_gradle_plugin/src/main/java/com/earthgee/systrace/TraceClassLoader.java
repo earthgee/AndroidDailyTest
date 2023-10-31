@@ -1,7 +1,8 @@
 package com.earthgee.systrace;
 
+import com.earthgee.systrace.javautil.Log;
 import com.google.common.collect.ImmutableList;
-import com.earhtgee.systrace.javautil.Log;
+
 
 import java.io.File;
 import java.net.MalformedURLException;

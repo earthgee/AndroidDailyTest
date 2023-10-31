@@ -1,15 +1,13 @@
-package com.earhtgee.systrace.trace
+package com.earthgee.systrace.trace
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
-import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.builder.model.CodeShrinker
-import com.earhtgee.systrace.compat.CreationConfig.Companion.getCodeShrinker
-import com.earhtgee.systrace.extension.ITraceSwitchListener
-import com.earhtgee.systrace.extension.MatrixTraceExtension
-import com.earhtgee.systrace.javautil.Log
-import com.earhtgee.systrace.transform.MatrixTraceTransform
+import com.earthgee.systrace.compat.CreationConfig.Companion.getCodeShrinker
+import com.earthgee.systrace.extension.ITraceSwitchListener
+import com.earthgee.systrace.extension.MatrixTraceExtension
+import com.earthgee.systrace.javautil.Log
+import com.earthgee.systrace.transform.MatrixTraceTransform
 import org.gradle.api.Project
 import org.gradle.api.Task
 

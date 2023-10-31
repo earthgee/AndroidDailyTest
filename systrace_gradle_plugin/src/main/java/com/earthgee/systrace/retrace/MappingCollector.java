@@ -17,7 +17,7 @@
 package com.earthgee.systrace.retrace;
 
 
-import com.earhtgee.systrace.javautil.Log;
+import com.earthgee.systrace.javautil.Log;
 
 import org.objectweb.asm.Type;
 

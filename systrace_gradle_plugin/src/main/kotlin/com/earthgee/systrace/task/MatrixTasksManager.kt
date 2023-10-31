@@ -1,8 +1,8 @@
-package com.earhtgee.systrace.task
+package com.earthgee.systrace.task
 
 import com.android.build.gradle.AppExtension
-import com.earhtgee.systrace.compat.MatrixTraceCompat
-import com.earhtgee.systrace.extension.MatrixTraceExtension
+import com.earthgee.systrace.compat.MatrixTraceCompat
+import com.earthgee.systrace.extension.MatrixTraceExtension
 import org.gradle.api.Project
 
 /**
@@ -23,7 +23,6 @@ class MatrixTasksManager {
                           project: Project,
                           traceExtension: MatrixTraceExtension) {
         createMatrixTraceTask(android, project, traceExtension)
-//        createRemoveUnusedResourcesTask(android, project, removeUnusedResourcesExtension)
     }
 
     private fun createMatrixTraceTask(
