@@ -3,7 +3,7 @@
 buildscript {
 
     dependencies {
-        classpath ("com.earthgee.systrace:systrace:1.4") { changing = true }
+        classpath ("com.earthgee.systrace:systrace:1.6") { changing = true }
     }
 
 }

@@ -11,6 +11,14 @@
         android:layout_height="wrap_content"/>
 
     <Button
+        android:id="@+id/btn_apply_origin"
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="origin"
+        />
+
+    <Button
         android:id="@+id/btn_apply_hotfix"
         android:layout_marginTop="20dp"
         android:layout_width="wrap_content"

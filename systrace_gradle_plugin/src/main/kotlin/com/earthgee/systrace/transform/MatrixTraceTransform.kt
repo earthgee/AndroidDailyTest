@@ -2,6 +2,7 @@ package com.earthgee.systrace.transform
 
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.utils.FileUtils
 import com.earthgee.systrace.Configuration
 import com.earthgee.systrace.extension.MatrixTraceExtension
 import com.earthgee.systrace.javautil.Log
@@ -54,7 +55,92 @@ class MatrixTraceTransform(
     //核心
     override fun transform(transformInvocation: TransformInvocation) {
         super.transform(transformInvocation)
-        transforming(transformInvocation)
+        if (transparent) {
+            transparent(transformInvocation)
+        } else {
+            transforming(transformInvocation)
+        }
+    }
+
+    /**
+     * Passes all inputs throughout.
+     * TODO: How to avoid this trivial work?
+     */
+    private fun transparent(invocation: TransformInvocation) {
+
+        val outputProvider = invocation.outputProvider!!
+
+        if (!invocation.isIncremental) {
+            outputProvider.deleteAll()
+        }
+
+        for (ti in invocation.inputs) {
+            for (jarInput in ti.jarInputs) {
+                val inputJar = jarInput.file
+                val outputJar = outputProvider.getContentLocation(
+                    jarInput.name,
+                    jarInput.contentTypes,
+                    jarInput.scopes,
+                    Format.JAR)
+
+                if (invocation.isIncremental) {
+                    when (jarInput.status) {
+                        Status.NOTCHANGED -> {
+                        }
+                        Status.ADDED, Status.CHANGED -> {
+                            copyFileAndMkdirsAsNeed(inputJar, outputJar)
+                        }
+                        Status.REMOVED -> FileUtils.delete(outputJar)
+                        else -> {}
+                    }
+                } else {
+                    copyFileAndMkdirsAsNeed(inputJar, outputJar)
+                }
+            }
+            for (directoryInput in ti.directoryInputs) {
+                val inputDir = directoryInput.file
+                val outputDir = outputProvider.getContentLocation(
+                    directoryInput.name,
+                    directoryInput.contentTypes,
+                    directoryInput.scopes,
+                    Format.DIRECTORY)
+
+                if (invocation.isIncremental) {
+                    for (entry in directoryInput.changedFiles.entries) {
+                        val inputFile = entry.key
+                        when (entry.value) {
+                            Status.NOTCHANGED -> {
+                            }
+                            Status.ADDED, Status.CHANGED -> if (!inputFile.isDirectory) {
+                                val outputFile = toOutputFile(outputDir, inputDir, inputFile)
+                                copyFileAndMkdirsAsNeed(inputFile, outputFile)
+                            }
+                            Status.REMOVED -> {
+                                val outputFile = toOutputFile(outputDir, inputDir, inputFile)
+                                FileUtils.deleteIfExists(outputFile)
+                            }
+                            else -> {}
+                        }
+                    }
+                } else {
+                    for (`in` in FileUtils.getAllFiles(inputDir)) {
+                        val out = toOutputFile(outputDir, inputDir, `in`)
+                        copyFileAndMkdirsAsNeed(`in`, out)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun copyFileAndMkdirsAsNeed(from: File, to: File) {
+        if (from.exists()) {
+            to.parentFile.mkdirs()
+            FileUtils.copyFile(from, to)
+        }
+    }
+
+    private fun toOutputFile(outputDir: File, inputDir: File, inputFile: File): File {
+        return File(outputDir, inputFile.toRelativeString(inputDir))
     }
 
     //创建transform 配置文件

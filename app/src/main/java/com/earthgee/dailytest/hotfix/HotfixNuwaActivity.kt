@@ -18,11 +18,16 @@ class HotfixNuwaActivity : AppCompatActivity(){
     private val mTvContent: TextView by lazy(LazyThreadSafetyMode.NONE) { findViewById<TextView>(R.id.tv_content) }
     private val mBtnApplyHotfix: Button by lazy(LazyThreadSafetyMode.NONE) { findViewById<Button>(R.id.btn_apply_hotfix) }
 
+    private val mBtnApplyOrigin: Button by lazy(LazyThreadSafetyMode.NONE) { findViewById<Button>(R.id.btn_apply_origin) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hotfix_nuwa)
 
-        mTvContent.text = LoadBugClass().bugString
+        mBtnApplyOrigin.setOnClickListener {
+            mTvContent.text = LoadBugClass().bugString
+        }
+
         mBtnApplyHotfix.setOnClickListener {
             val dexPath = File(getDir("dex", Context.MODE_PRIVATE), "fix_dex.jar")
             Utils.prepareDex(this.applicationContext, dexPath, "fix_dex.jar")
