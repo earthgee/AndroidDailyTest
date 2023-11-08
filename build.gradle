@@ -4,6 +4,7 @@ buildscript {
 
     dependencies {
         classpath ("com.earthgee.systrace:systrace:1.6") { changing = true }
+        classpath ("com.tencent.tinker:tinker-patch-gradle-plugin:${TINKER_VERSION}")
     }
 
 }

@@ -10,7 +10,7 @@
     </queries>
 
     <application
-        android:name=".MainApplication"
+        android:name="com.earthgee.dailytest.TEApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -38,6 +38,7 @@
         <activity android:name=".sharedpreferenceimpl.TestSharedPreferencesActivity" />
         <activity android:name=".hotfix.HotfixMainActivity" />
         <activity android:name=".hotfix.HotfixNuwaActivity" />
+        <activity android:name=".hotfix.tinker.TinkerMainActivity" />
     </application>
 
 </manifest>

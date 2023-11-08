@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         applicationId "com.earthgee.dailytest"
-        minSdk 24
+        minSdk 23
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -24,6 +24,20 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         //arouter
+
+        //tinker
+        /**
+         * buildConfig can change during patch!
+         * we can use the newly value when patch
+         */
+        buildConfigField "String", "MESSAGE", "\"I am the base apk\""
+//        buildConfigField "String", "MESSAGE", "\"I am the patch apk\""
+        /**
+         * client version would update with patch
+         * so we can get the newly git version easily!
+         */
+        buildConfigField "String", "TINKER_ID", "\"${TINKER_ID}\""
+        buildConfigField "String", "PLATFORM", "\"all\""
     }
 
     signingConfigs {
@@ -83,11 +97,24 @@ dependencies {
     implementation project(':kotlin')
     implementation project(":camera")
 
+    //tinker
+    api("com.tencent.tinker:tinker-android-lib:${TINKER_VERSION}") { changing = true }
+
+    // Maven local cannot handle transist dependencies.
+    implementation("com.tencent.tinker:tinker-android-loader:${TINKER_VERSION}") { changing = true }
+
+    annotationProcessor("com.tencent.tinker:tinker-android-anno:${TINKER_VERSION}") { changing = true }
+    compileOnly("com.tencent.tinker:tinker-android-anno:${TINKER_VERSION}") { changing = true }
+    compileOnly("com.tencent.tinker:tinker-android-anno-support:${TINKER_VERSION}") { changing = true }
+
 }
 
-apply plugin: 'com.earthgee.systrace'
-performance {
-    trace {
-        enable = true
-    }
-}
+//apply plugin: 'com.earthgee.systrace'
+//performance {
+//    trace {
+//        enable = true
+//    }
+//}
+
+apply from: "tinker.gradle"
+

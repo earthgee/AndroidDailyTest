@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.earthgee.dailytest.R
 import com.earthgee.dailytest.androidbase.AidlClientActivity
+import com.earthgee.dailytest.hotfix.tinker.TinkerMainActivity
 import com.earthgee.dailytest.sharedpreferenceimpl.TestSharedPreferencesActivity
 import com.julive.adapter.core.*
 
@@ -17,10 +18,11 @@ import com.julive.adapter.core.*
  *  功能：
  */
 @Route(path = "/hotfix/main")
-class HotfixMainActivity : AppCompatActivity(){
+class HotfixMainActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
         "nuwa",
+        "tinker"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +50,11 @@ class HotfixMainActivity : AppCompatActivity(){
                                 this@HotfixMainActivity,
                                 HotfixNuwaActivity::class.java
                             )
+                        )
+                    }
+                    "tinker" -> {
+                        startActivity(
+                            Intent(this@HotfixMainActivity, TinkerMainActivity::class.java)
                         )
                     }
                 }
