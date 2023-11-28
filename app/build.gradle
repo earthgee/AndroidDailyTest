@@ -107,6 +107,9 @@ dependencies {
     compileOnly("com.tencent.tinker:tinker-android-anno:${TINKER_VERSION}") { changing = true }
     compileOnly("com.tencent.tinker:tinker-android-anno-support:${TINKER_VERSION}") { changing = true }
 
+    //leakcanary
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
+
 }
 
 //apply plugin: 'com.earthgee.systrace'

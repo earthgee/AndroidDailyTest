@@ -19,7 +19,8 @@ class MainActivity : AppCompatActivity() {
         ItemModule("Performance", "/performance/main"),
         ItemModule("Kotlin", "/kotlin/main"),
         ItemModule("Camera", "/camera/main"),
-        ItemModule("Hotfix", "/hotfix/main")
+        ItemModule("Hotfix", "/hotfix/main"),
+        ItemModule("Binder", "/binder/main")
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

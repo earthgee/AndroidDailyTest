@@ -39,6 +39,10 @@
         <activity android:name=".hotfix.HotfixMainActivity" />
         <activity android:name=".hotfix.HotfixNuwaActivity" />
         <activity android:name=".hotfix.tinker.TinkerMainActivity" />
+        <activity android:name=".binder.BinderClientActivity" />
+
+        <service android:name=".binder.BinderService"
+            android:process=":remote"/>
     </application>
 
 </manifest>
