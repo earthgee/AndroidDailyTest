@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.earthgee.kotlin.conroutie.ConroutineMainActivity
+import com.earthgee.kotlin.function.FunctionMainActivity
 import com.julive.adapter.core.*
 
 /**
@@ -19,7 +20,7 @@ import com.julive.adapter.core.*
 class KtListActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
-        "dsl", "asycn&wait"
+        "dsl", "asycn&wait", "function"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +48,9 @@ class KtListActivity : AppCompatActivity() {
                     }
                     "asycn&wait" -> {
                         startActivity(Intent(this@KtListActivity, ConroutineMainActivity::class.java))
+                    }
+                    "function" -> {
+                        startActivity(Intent(this@KtListActivity, FunctionMainActivity::class.java))
                     }
                 }
             }

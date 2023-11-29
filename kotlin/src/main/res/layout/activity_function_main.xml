@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_map"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1.input:[1,2,3,4,5]"/>
+
+        <Button
+            android:id="@+id/btn_map"
+            android:text="map"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tv_filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2.input:[1,2,3,4,5]"/>
+
+        <Button
+            android:id="@+id/btn_filter"
+            android:text="filter"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tv_reduce"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="3.input:[1,2,3,4,5]"/>
+
+        <Button
+            android:id="@+id/btn_reduce"
+            android:text="reduce"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tv_fold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="4.input:[1,2,3,4,5]"/>
+
+        <Button
+            android:id="@+id/btn_fold"
+            android:text="fold"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tv_flat_map"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5.input:[hello, world,kotlin]"/>
+
+        <Button
+            android:id="@+id/btn_flat_map"
+            android:text="fold"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+</ScrollView>

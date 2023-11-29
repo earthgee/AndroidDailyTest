@@ -5,6 +5,7 @@
 
     <application>
         <activity android:name=".MainActivity" />
+        <activity android:name=".function.FunctionMainActivity"/>
         <activity android:name=".KtListActivity" />
         <activity android:name=".conroutie.ConroutineMainActivity" />
     </application>
