@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.earthgee.dailytest.R
+import com.earthgee.dailytest.ashmem.AshmemClientActivity
+import com.earthgee.dailytest.binder.BinderClientActivity
 import com.earthgee.dailytest.sharedpreferenceimpl.TestSharedPreferencesActivity
 import com.julive.adapter.core.*
 
@@ -20,7 +22,9 @@ class AndroidBaseMainActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
         "Simple Aidl",
-        "Custom SharedPreferences"
+        "Custom SharedPreferences",
+        "Simple Binder",
+        "Simpel Ashmem"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +62,12 @@ class AndroidBaseMainActivity : AppCompatActivity() {
                                 TestSharedPreferencesActivity::class.java
                             )
                         )
+                    }
+                    "Simple Binder" -> {
+                        startActivity(Intent(this@AndroidBaseMainActivity, BinderClientActivity::class.java))
+                    }
+                    "Simpel Ashmem" -> {
+                        startActivity(Intent(this@AndroidBaseMainActivity, AshmemClientActivity::class.java))
                     }
                 }
             }

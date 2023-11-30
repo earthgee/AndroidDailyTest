@@ -40,8 +40,12 @@
         <activity android:name=".hotfix.HotfixNuwaActivity" />
         <activity android:name=".hotfix.tinker.TinkerMainActivity" />
         <activity android:name=".binder.BinderClientActivity" />
+        <activity android:name=".ashmem.AshmemClientActivity" />
 
         <service android:name=".binder.BinderService"
+            android:process=":remote"/>
+
+        <service android:name=".ashmem.AshmemService"
             android:process=":remote"/>
     </application>
 
