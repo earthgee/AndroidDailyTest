@@ -6,6 +6,7 @@ import android.content.ServiceConnection
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.widget.TextView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.earthgee.aidlservice.IMyAidlInterface
@@ -26,7 +27,9 @@ class AidlClientActivity : AppCompatActivity() {
             override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
                 myAidlInterface = IMyAidlInterface.Stub.asInterface(p1)
                 val str = myAidlInterface.basicTypes(0,0L,false,0.0f,0.0f.toDouble(),"")
+                myAidlInterface.add(1, 1)
                 text.text = str
+                Log.d("earthgee", "aidl onServiceConnected thread is ${Thread.currentThread().name}")
             }
 
             override fun onServiceDisconnected(p0: ComponentName?) {

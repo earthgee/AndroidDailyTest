@@ -3,6 +3,7 @@ package com.earthgee.aidlservice
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
 
 class MyService : Service() {
 
@@ -21,6 +22,10 @@ class MyService : Service() {
             aString: String?
         ): String {
             return "Hello World2"
+        }
+
+        override fun add(a: Int, b: Int) {
+            Log.d("earthgee", "${a+b}")
         }
 
     }

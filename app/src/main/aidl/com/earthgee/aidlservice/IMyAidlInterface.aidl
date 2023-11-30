@@ -10,4 +10,7 @@ interface IMyAidlInterface {
      */
     String basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat,
             double aDouble, String aString);
+
+    oneway void add(int a, int b);
+
 }
