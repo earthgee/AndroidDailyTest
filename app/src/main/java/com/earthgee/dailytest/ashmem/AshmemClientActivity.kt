@@ -29,6 +29,9 @@ class AshmemClientActivity : AppCompatActivity() {
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                 val data = Parcel.obtain()
                 val reply = Parcel.obtain()
+
+//                data.writeBlob()
+
                 service?.transact(1, data, reply, 0)
                 val fd = reply.readFileDescriptor().fileDescriptor
                 findViewById<TextView>(R.id.title).text = FileReader(fd).readText()

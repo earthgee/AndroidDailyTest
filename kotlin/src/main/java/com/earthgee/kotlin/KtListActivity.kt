@@ -9,6 +9,7 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.earthgee.kotlin.conroutie.ConroutineMainActivity
 import com.earthgee.kotlin.function.FunctionMainActivity
+import com.earthgee.kotlin.jetpack.room.WordListActivity
 import com.julive.adapter.core.*
 
 /**
@@ -20,7 +21,7 @@ import com.julive.adapter.core.*
 class KtListActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
-        "dsl", "asycn&wait", "function"
+        "dsl", "asycn&wait", "function", "jetpack room"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +52,9 @@ class KtListActivity : AppCompatActivity() {
                     }
                     "function" -> {
                         startActivity(Intent(this@KtListActivity, FunctionMainActivity::class.java))
+                    }
+                    "jetpack room" -> {
+                        startActivity(Intent(this@KtListActivity, WordListActivity::class.java))
                     }
                 }
             }
