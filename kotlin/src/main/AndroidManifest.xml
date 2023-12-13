@@ -10,6 +10,7 @@
         <activity android:name=".conroutie.ConroutineMainActivity" />
 
         <activity android:name=".jetpack.room.WordListActivity" />
+        <activity android:name=".jetpack.car.demo.CarActivity" />
     </application>
 
 </manifest>

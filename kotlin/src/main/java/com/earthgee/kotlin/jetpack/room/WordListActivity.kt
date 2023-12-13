@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -47,6 +49,18 @@ class WordListActivity : AppCompatActivity(){
             val intent = Intent(this@WordListActivity, NewWordActivity::class.java)
             startActivityForResult(intent, newWordActivityRequestCode)
         }
+
+        lifecycle.addObserver(object: DefaultLifecycleObserver {
+
+            override fun onResume(owner: LifecycleOwner) {
+                super.onResume(owner)
+            }
+
+            override fun onPause(owner: LifecycleOwner) {
+                super.onPause(owner)
+            }
+
+        })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

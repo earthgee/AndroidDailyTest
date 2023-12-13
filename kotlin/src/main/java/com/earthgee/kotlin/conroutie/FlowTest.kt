@@ -44,6 +44,6 @@ fun testCancel() = runBlocking {
     println("Done")
 }
 
-suspend fun testCatchException() = CoroutineScope() {
-
-}
+//suspend fun testCatchException() = CoroutineScope() {
+//
+//}
