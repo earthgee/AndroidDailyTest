@@ -6,11 +6,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
-import com.alibaba.android.arouter.launcher.ARouter
 import com.earthgee.kotlin.conroutie.ConroutineMainActivity
 import com.earthgee.kotlin.function.FunctionMainActivity
 import com.earthgee.kotlin.jetpack.car.demo.CarActivity
 import com.earthgee.kotlin.jetpack.room.WordListActivity
+import com.earthgee.kotlin.lottie.LottiePlayActivity
 import com.julive.adapter.core.*
 
 /**
@@ -22,7 +22,7 @@ import com.julive.adapter.core.*
 class KtListActivity : AppCompatActivity() {
 
     val mainItemList = arrayListOf(
-        "dsl", "asycn&wait", "function", "jetpack room", "Jetpack base"
+        "dsl", "asycn&wait", "function", "jetpack room", "Jetpack base", "Lottie"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,6 +59,9 @@ class KtListActivity : AppCompatActivity() {
                     }
                     "Jetpack base" -> {
                         startActivity(Intent(this@KtListActivity, CarActivity::class.java))
+                    }
+                    "Lottie" -> {
+                        startActivity(Intent(this@KtListActivity, LottiePlayActivity::class.java))
                     }
                 }
             }

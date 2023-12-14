@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/dynamic_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:lottie_fileName="HamburgerArrow.json"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"/>
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/dynamic_text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:lottie_fileName="AndroidWave.json"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"/>
+
+    </LinearLayout>
+
+</ScrollView>

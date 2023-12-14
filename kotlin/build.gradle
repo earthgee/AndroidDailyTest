@@ -84,4 +84,7 @@ dependencies {
     def adapterVersion = '1.2.5'
     implementation "com.github.ibaozi-cn.RecyclerViewAdapter:adapter-core:$adapterVersion"
 
+    //lottie
+    implementation 'com.airbnb.android:lottie:6.2.0'
+
 }

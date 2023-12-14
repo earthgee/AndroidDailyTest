@@ -11,6 +11,8 @@
 
         <activity android:name=".jetpack.room.WordListActivity" />
         <activity android:name=".jetpack.car.demo.CarActivity" />
+
+        <activity android:name=".lottie.LottiePlayActivity" />
     </application>
 
 </manifest>
