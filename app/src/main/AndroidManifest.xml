@@ -41,6 +41,7 @@
         <activity android:name=".hotfix.tinker.TinkerMainActivity" />
         <activity android:name=".binder.BinderClientActivity" />
         <activity android:name=".ashmem.AshmemClientActivity" />
+        <activity android:name=".ui.SurfaceViewActivity" />
 
         <service android:name=".binder.BinderService"
             android:process=":remote"/>

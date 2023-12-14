@@ -10,6 +10,7 @@ import com.earthgee.dailytest.R
 import com.earthgee.dailytest.ashmem.AshmemClientActivity
 import com.earthgee.dailytest.binder.BinderClientActivity
 import com.earthgee.dailytest.sharedpreferenceimpl.TestSharedPreferencesActivity
+import com.earthgee.dailytest.ui.SurfaceViewActivity
 import com.julive.adapter.core.*
 
 /**
@@ -24,7 +25,8 @@ class AndroidBaseMainActivity : AppCompatActivity() {
         "Simple Aidl",
         "Custom SharedPreferences",
         "Simple Binder",
-        "Simpel Ashmem"
+        "Simpel Ashmem",
+        "SurfaceView"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,6 +70,9 @@ class AndroidBaseMainActivity : AppCompatActivity() {
                     }
                     "Simpel Ashmem" -> {
                         startActivity(Intent(this@AndroidBaseMainActivity, AshmemClientActivity::class.java))
+                    }
+                    "SurfaceView" -> {
+                        startActivity(Intent(this@AndroidBaseMainActivity, SurfaceViewActivity::class.java))
                     }
                 }
             }
