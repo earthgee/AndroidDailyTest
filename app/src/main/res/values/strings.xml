@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DailyTest</string>
+<!--    <string name="app_name">DailyTest</string>-->
 
     <string name="test_resource">I am in the base apk</string>
 </resources>

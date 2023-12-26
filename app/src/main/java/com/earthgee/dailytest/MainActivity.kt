@@ -10,7 +10,7 @@ import com.julive.adapter.core.*
 /**
  *  Created by zhaoruixuan1 on 2023/8/9
  *  test
- *  功能：主页面
+ *  功能：应用主页面
  */
 class MainActivity : AppCompatActivity() {
 
@@ -20,7 +20,8 @@ class MainActivity : AppCompatActivity() {
         ItemModule("Kotlin", "/kotlin/main"),
         ItemModule("Camera", "/camera/main"),
         ItemModule("Hotfix", "/hotfix/main"),
-        ItemModule("Binder", "/binder/main")
+        ItemModule("Binder", "/binder/main"),
+        ItemModule("Jetpack", "/jetpack/main")
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

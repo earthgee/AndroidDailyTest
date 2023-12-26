@@ -6,8 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModelStore;
+
 import com.earthgee.dailytest.hotfix.tinker.SampleApplicationContext;
 import com.earthgee.dailytest.hotfix.tinker.TinkerManager;
+import com.earthgee.jetpack.JetpackApp;
 import com.tencent.tinker.anno.DefaultLifeCycle;
 import com.tencent.tinker.entry.DefaultApplicationLike;
 import com.tencent.tinker.lib.tinker.Tinker;
@@ -62,6 +66,7 @@ public class MainApplicationLike extends DefaultApplicationLike {
     public void onCreate() {
         super.onCreate();
         ApplicationLikeUtil.onCreate();
+
     }
 
 }
