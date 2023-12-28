@@ -47,18 +47,23 @@ class DetailFragment : BaseFragment(){
         mState.setMoment(arguments?.getParcelable(Moment.MOMENT))
 
         mMessenger.momentResult.observe(viewLifecycleOwner) {
-
+            it?.let {
+                mState.setMoment(it)
+            }
         }
     }
 
     inner class ClickProxy {
 
         fun back() {
-
+            //none
         }
 
         fun edit() {
-
+            val bundle = Bundle().apply {
+                putParcelable(Moment.MOMENT, mState.moment.value)
+            }
+            nav.navigate(R.id.action_detailFragment_to_editorFragment, bundle)
         }
 
     }

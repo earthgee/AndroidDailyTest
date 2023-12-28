@@ -26,13 +26,13 @@
         android:label="ListFragment"
         tools:layout="@layout/jetpack_fragment_list">
 
-<!--        <action-->
-<!--            android:id="@+id/action_listFragment_to_editorFragment"-->
-<!--            app:destination="@id/editorFragment"-->
-<!--            app:enterAnim="@anim/h_fragment_enter"-->
-<!--            app:exitAnim="@anim/h_fragment_exit"-->
-<!--            app:popEnterAnim="@anim/h_fragment_pop_enter"-->
-<!--            app:popExitAnim="@anim/h_fragment_pop_exit" />-->
+        <action
+            android:id="@+id/action_listFragment_to_editorFragment"
+            app:destination="@id/editorFragment"
+            app:enterAnim="@anim/h_fragment_enter"
+            app:exitAnim="@anim/h_fragment_exit"
+            app:popEnterAnim="@anim/h_fragment_pop_enter"
+            app:popExitAnim="@anim/h_fragment_pop_exit" />
 
         <action
             android:id="@+id/action_listFragment_to_detailFragment"
@@ -44,25 +44,24 @@
 
     </fragment>
 
-<!--    <fragment-->
-<!--        android:id="@+id/editorFragment"-->
-<!--        android:name="com.kunminx.puremusic.ui.EditorFragment"-->
-<!--        android:label="EditorFragment"-->
-<!--        tools:layout="@layout/fragment_editor">-->
+    <fragment
+        android:id="@+id/editorFragment"
+        android:name="com.earthgee.jetpack.livedata.demo.ui.EditorFragment"
+        android:label="EditorFragment">
 
-<!--    </fragment>-->
+    </fragment>
 
     <fragment
         android:id="@+id/detailFragment"
         android:name="com.earthgee.jetpack.livedata.demo.ui.DetailFragment"
         android:label="DetailFragment">
-<!--        <action-->
-<!--            android:id="@+id/action_detailFragment_to_editorFragment"-->
-<!--            app:destination="@id/editorFragment"-->
-<!--            app:enterAnim="@anim/h_fragment_enter"-->
-<!--            app:exitAnim="@anim/h_fragment_exit"-->
-<!--            app:popEnterAnim="@anim/h_fragment_pop_enter"-->
-<!--            app:popExitAnim="@anim/h_fragment_pop_exit" />-->
+        <action
+            android:id="@+id/action_detailFragment_to_editorFragment"
+            app:destination="@id/editorFragment"
+            app:enterAnim="@anim/h_fragment_enter"
+            app:exitAnim="@anim/h_fragment_exit"
+            app:popEnterAnim="@anim/h_fragment_pop_enter"
+            app:popExitAnim="@anim/h_fragment_pop_exit" />
     </fragment>
 
 

@@ -63,8 +63,9 @@ dependencies {
 
     //navigation
     implementation 'androidx.navigation:navigation-runtime:2.5.1'
-    implementation "androidx.navigation:navigation-fragment-ktx:2.5.1"
+//    implementation "androidx.navigation:navigation-fragment-ktx:2.5.1"
     implementation "androidx.navigation:navigation-ui-ktx:2.5.1"
+
 
     // UI
     implementation "androidx.constraintlayout:constraintlayout:2.0.2"
@@ -73,5 +74,9 @@ dependencies {
     //arouter
     implementation 'com.github.jadepeakpoet.ARouter:arouter-api:1.0.2'
     kapt 'com.github.jadepeakpoet.ARouter:arouter-compiler:1.0.2'
+
+    //jetpack
+    implementation 'com.kunminx.arch:unpeek-livedata:7.8.0'
+    implementation 'com.kunminx.arch:smooth-navigation:4.0.0'
 
 }

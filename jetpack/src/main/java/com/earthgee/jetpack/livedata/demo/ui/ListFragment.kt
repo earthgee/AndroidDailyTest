@@ -66,12 +66,14 @@ class ListFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         mMessenger.momentResult.observe(viewLifecycleOwner) {
-            mState.notifyGlobalChange(it)
+            it?.let {
+                mState.notifyGlobalChange(it)
+            }
         }
 
-        mMessenger.testDelayMsgResult.observe(viewLifecycleOwner) {
-            showLongToast(it)
-        }
+//        mMessenger.testDelayMsgResult.observe(viewLifecycleOwner) {
+//            showLongToast(it)
+//        }
 
         mState.list.observe(viewLifecycleOwner) { items ->
             adapter?.submitList(items)
@@ -84,7 +86,7 @@ class ListFragment : BaseFragment() {
     inner class ClickProxy {
 
         fun fabClick() {
-
+            nav.navigate(R.id.action_listFragment_to_editorFragment)
         }
 
     }
