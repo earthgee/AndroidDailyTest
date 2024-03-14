@@ -1,5 +1,8 @@
 pluginManagement {
     repositories {
+        maven{ url "https://maven.aliyun.com/repository/public" }
+        maven{ url "https://maven.aliyun.com/repository/google" }
+        maven{ url "https://maven.aliyun.com/repository/gradle-plugin" }
         mavenLocal()
         gradlePluginPortal()
         google()
@@ -10,6 +13,9 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        maven{ url "https://maven.aliyun.com/repository/public" }
+        maven{ url "https://maven.aliyun.com/repository/google" }
+        maven{ url "https://maven.aliyun.com/repository/gradle-plugin" }
         mavenLocal()
         google()
         mavenCentral()
@@ -30,3 +36,6 @@ include ':base'
 include ':systrace_gradle_plugin'
 include ':nuwaref'
 include ':jetpack'
+include ':view'
+include ':lib-ktx'
+include ':lib-common'

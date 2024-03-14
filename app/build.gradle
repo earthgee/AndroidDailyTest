@@ -119,6 +119,7 @@ dependencies {
     implementation project(':kotlin')
     implementation project(":camera")
     implementation project(':jetpack')
+    implementation project(':view')
 
     //tinker
     api("com.tencent.tinker:tinker-android-lib:${TINKER_VERSION}") { changing = true }

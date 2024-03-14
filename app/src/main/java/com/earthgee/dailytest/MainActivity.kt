@@ -21,7 +21,8 @@ class MainActivity : AppCompatActivity() {
         ItemModule("Camera", "/camera/main"),
         ItemModule("Hotfix", "/hotfix/main"),
         ItemModule("Binder", "/binder/main"),
-        ItemModule("Jetpack", "/jetpack/main")
+        ItemModule("Jetpack", "/jetpack/main"),
+        ItemModule("View", "/view/main")
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
