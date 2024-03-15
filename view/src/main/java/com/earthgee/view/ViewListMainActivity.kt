@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
+import com.earthgee.view.flipboard.FlipboardViewActivity
 import com.earthgee.view.sportview.SportViewActivity
 import com.julive.adapter.core.getModel
 import com.julive.adapter.core.getView
@@ -22,7 +23,7 @@ import com.julive.adapter.core.listAdapter
 class ViewListMainActivity: AppCompatActivity() {
 
     val mainItemList = arrayListOf(
-        "sportView"
+        "sportView", "FlipboardView"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +48,9 @@ class ViewListMainActivity: AppCompatActivity() {
                 when(model) {
                     "sportView" -> {
                         startActivity(Intent(this@ViewListMainActivity, SportViewActivity::class.java))
+                    }
+                    "FlipboardView" -> {
+                        startActivity(Intent(this@ViewListMainActivity, FlipboardViewActivity::class.java))
                     }
                 }
             }

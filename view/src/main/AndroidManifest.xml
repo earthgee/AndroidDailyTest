@@ -4,6 +4,7 @@
     <application>
         <activity android:name=".ViewListMainActivity" />
         <activity android:name=".sportview.SportViewActivity" />
+        <activity android:name=".flipboard.FlipboardViewActivity" />
     </application>
 
 </manifest>
