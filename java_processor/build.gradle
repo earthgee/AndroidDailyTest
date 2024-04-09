@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+//    implementation 'com.squareup:javapoet:1.10.0'
+
+    implementation 'org.apache.commons:commons-lang3:3.4'
+    implementation 'org.apache.commons:commons-collections4:4.1'
+}
+
+compileJava {
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
