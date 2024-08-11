@@ -5,6 +5,7 @@
         <activity android:name=".ViewListMainActivity" />
         <activity android:name=".sportview.SportViewActivity" />
         <activity android:name=".flipboard.FlipboardViewActivity" />
+        <activity android:name=".recyclerview.MultiRvActivity" />
     </application>
 
 </manifest>

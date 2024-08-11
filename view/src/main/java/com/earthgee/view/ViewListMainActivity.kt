@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.earthgee.view.flipboard.FlipboardViewActivity
+import com.earthgee.view.recyclerview.MultiRvActivity
 import com.earthgee.view.sportview.SportViewActivity
 import com.julive.adapter.core.getModel
 import com.julive.adapter.core.getView
@@ -23,7 +24,7 @@ import com.julive.adapter.core.listAdapter
 class ViewListMainActivity: AppCompatActivity() {
 
     val mainItemList = arrayListOf(
-        "sportView", "FlipboardView"
+        "sportView", "FlipboardView", "multiRV"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +52,9 @@ class ViewListMainActivity: AppCompatActivity() {
                     }
                     "FlipboardView" -> {
                         startActivity(Intent(this@ViewListMainActivity, FlipboardViewActivity::class.java))
+                    }
+                    "multiRV" -> {
+                        startActivity(Intent(this@ViewListMainActivity, MultiRvActivity::class.java))
                     }
                 }
             }
